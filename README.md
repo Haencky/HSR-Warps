@@ -1,6 +1,2 @@
 # HSR-Warps
-Currently just one file containing IDs to each item in Honkai Star Rail
-
-```
-https://haencky.github.io/HSR-Warps/itemIDs.json
-```
+Currently just one [file](https://haencky.github.io/HSR-Warps/itemIDs.json) containing IDs to each item in Honkai Star Rail
