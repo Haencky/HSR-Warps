@@ -23,7 +23,7 @@ You can add an item manually and link the banner to it:
 
 # How to use
 ## Symbols:
-- `🎫``: Add new pulls
+- `🎫`: Add new pulls
 - `➕`: Manually add new item
 - `🚩`: List all banners (newest first)
 - `⚙️`: Admin Page
