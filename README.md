@@ -2,7 +2,7 @@
 This [file](https://haencky.github.io/HSR-Warps/itemIDs.json) contains IDs to each item in Honkai Star Rail
 
 > [!TIP]
-> You can pull it as an docker image:
+> You can pull it as an docker image from [here](https://hub.docker.com/r/haenck/hsr-warptracker):
 > ``` bash
 > docker pull haenck/hsr-warptracker
 > ```
