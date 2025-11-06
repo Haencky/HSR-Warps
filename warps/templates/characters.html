@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% load static %}
+{% block head %}
+    <title>Characters</title>
+    <link rel="stylesheet" href="{% static 'css/characters.css' %}">
+{% endblock head %}
+
+{% block content %}
+    {% for c, c_info in characters %}
+        {{ c }}
+    {% endfor %}
+{% endblock content %}

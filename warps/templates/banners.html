@@ -1,0 +1,26 @@
+{% extends "base.html" %} {% load static %} {% block head %}
+<title>Banner</title>
+<link rel="stylesheet" href="{% static 'css/banner.css' %}" />
+{% endblock head %} {% block content %}
+<div class="content">
+  {% for b in banner %} {% if b.gacha_id__gacha_type__gacha_type >= 11 and b.gacha_id__item_id__image %}
+  <div class="banner">
+      <img
+      src="media/{{ b.gacha_id__item_id__image }}"
+      alt="{{ b.gacha_id }}"
+      class="banner-image
+	  {% if b.obtained == 5 %}obtained {% else %}failed{% endif %}"
+    />
+    <div class="stats">
+		<div class="text">
+      <!-- <a href="detail_banner/{{ b.gacha_id }}"> -->
+			<img src="{% static 'images/specialpass.png' %}" alt="specialpass" class="ticket-image
+      {% if b.ff > 0 %}ff_lost {% else %}ff_win{% endif %}">
+      </a>
+			{{ b.count }}
+		</div>
+	</div>
+  </div>
+  {% endif %} {% endfor %}
+</div>
+{% endblock content %}

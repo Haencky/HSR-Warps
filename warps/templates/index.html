@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+    <link rel="stylesheet" href="{% static 'css/index.css' %}">
+    <title>Warps</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="{% static '/js/index.js' %}"></script>
+
+{% endblock %}
+
+{% block content %}
+   <div class="container">
+        <div class="types-container">
+            {% for t_name, t_info in types.items %}
+                <div class="type-container" data-id="{{ t_info.id.id }}">
+                    <img src="{{ t_info.last_win.item_id.image.url }}" class="type-image" alt="{{ t_name }}">
+                    <div class="type-header">
+                        <strong>{{ t_name }}</strong> ({{ t_info.c }})
+                    </div>
+                        <div class="type-pity">
+                            5⭐ Pity: {{ t_info.pity }} / 
+                            <span class="
+                                {% if t_info.warranted %} 
+                                    highlight-yes
+                                {% else %}
+                                    highlight-no 
+                                {% endif %}">
+                                {{ t_info.max_pity }}
+                            </span>
+                        </div>
+                    <div class="type-wr">
+                        {% if t_info.wr %} Winrate: {{ t_info.wr }}% {% endif %}
+                    </div>
+                    <div class="type-money">
+                        {{ t_info.jade }} Jade ({{ t_info.euro }}€)
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="content">
+            <canvas id="stats"></canvas>
+        </div>
+   </div>
+{% endblock %}
