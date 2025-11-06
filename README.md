@@ -1,8 +1,8 @@
 # HSR-Warps
 This [file](https://haencky.github.io/HSR-Warps/itemIDs.json) contains IDs to each item in Honkai Star Rail
 
-> [!INFO]
-> Pull docker image:
+> [!TIP]
+> You can pull it as an docker image:
 > ``` bash
 > docker pull haenck/hsr-warptracker
 > ```
@@ -40,7 +40,7 @@ You can add an item manually and link the banner to it:
 > When opened HSR will create this URL to connect to the API
 
 ## Add new item
-> [!INFO]
+> [!NOTE]
 > You can always add or edit entries of the DB on the admin page.
 > But here the image is downloaded and the ID is set
 
