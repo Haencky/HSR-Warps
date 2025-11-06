@@ -27,6 +27,8 @@ You can add an item manually and link the banner to it:
 - `➕`: Manually add new item
 - `🚩`: List all banners (newest first)
 - `⚙️`: Admin Page
+- `Stellar Jade`: Link to Homepage
+- `Search`: let you search for items in english and your game language
 
 ## Add new pulls
 1. Click on `🎫`
