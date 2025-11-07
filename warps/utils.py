@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import Q, Max
 from datetime import datetime
 from time import sleep
 import requests
@@ -276,13 +276,15 @@ def fetch_info(url:str, gacha_type: int) -> dict:
             urL(str): url to HSR Api
         """
         last = 0
-        if l:=W.objects.filter(uid=_fetch_uid(url)).order_by('-warp_id').values('warp_id'): last = int(l[0]['warp_id'])
+        l = W.objects.filter(uid=_fetch_uid(url), gacha_id__gacha_type__gacha_type=gacha_type).aggregate(last=Max('warp_id'))
+        last_ = l.get('last')
+        last = last_ if last_ is not None else 0
 
         counter = 0
 
         warps = requests.get(url).json()['data']['list'] # request all warps
         for warp in warps:
-            if int(warp['id']) <= last: # break loop if nothing new is added
+            if int(warp['id']) < last: # break loop if nothing new is added
                 return 0
             item_id = int(warp['item_id'])
             w = Warp(
@@ -308,14 +310,16 @@ def fetch_info(url:str, gacha_type: int) -> dict:
                 _add_warp(w)
             time.sleep(0.1)
         return counter
-    check_banner() # update all banner
-    return {'gacha_type': gacha_type, 'new_warps': _fetch(url)}
+    fetched = _fetch(url)
+    return {'gacha_type': gacha_type, 'new_warps': fetched}
 
 def check_banner():
     """
     Tries to match an item to a banner
     """
-    for b in Banner.objects.exclude(gacha_id__isnull=False).exclude(gacha_type=1):
+    print('hello_world')
+    for b in Banner.objects.exclude(item_id__isnull=False).exclude(gacha_type__gacha_type=1):
+        print('hello world')
         print(b)
         w = W.objects.filter(gacha_id=b.id, item_id__rarity=5).exclude(item_id__in=LOST)
         if w:

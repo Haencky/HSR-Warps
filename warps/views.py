@@ -13,7 +13,7 @@ from io import BytesIO
 from Levenshtein import distance
 import operator
 
-from .utils import fetch_info, WarpAnalyser
+from .utils import fetch_info, WarpAnalyser, check_banner
 from .models import *
 from .forms import *
 from .const import LOST, ITEM_ID_URL, IMAGE_URL, WIKI_URL
@@ -49,7 +49,7 @@ def index(request):
 
 def banners(request: HttpRequest):
     items = json.dumps(list(Item.objects.order_by('name').values('name', 'item_id', 'image', 'eng_name')))
-    w_per_banner = Warp.objects.all().values('gacha_id', 'gacha_id__item_id__image', 'gacha_id__gacha_type__gacha_type').annotate(count=Count('id'), obtained=Max('item_id__rarity', filter=~Q(item_id__item_id__in=LOST)), ff=Count('item_id__rarity', filter=Q(item_id__item_id__in=LOST))).order_by('-gacha_id')
+    w_per_banner = Warp.objects.all().values('gacha_id', 'gacha_id__item_id__image', 'gacha_id__gacha_type__gacha_type').annotate(count=Count('id'), obtained=Max('item_id__rarity', filter=~Q(item_id__item_id__in=LOST)), ff=Count('item_id__rarity', filter=Q(item_id__item_id__in=LOST))).order_by('gacha_id__id')
     return render(request, 'banners.html', {'banner': w_per_banner, 'items': items})
 
 #@login_required(login_url='/login')
@@ -62,6 +62,7 @@ def add_pulls(request:HttpRequest):
                 f = fetch_info(url, t)
                 if f['new_warps'] > 0:
                     messages.success(request, f'{f['gacha_type']}: {f['new_warps']} Warps added!')
+        check_banner()
             
     else:
         form = AddPullsForm()
