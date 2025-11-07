@@ -217,7 +217,6 @@ __marimo__/
 
 # This repo
 media
-warps/migrations/00*.py
 warps/migrations/__pycache__/
 **/__pycache__/
 **/*-py[co]
