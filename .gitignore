@@ -219,3 +219,5 @@ __marimo__/
 media
 warps/migrations/00*.py
 warps/migrations/__pycache__
+**/__pycache__
+**/*-pyc
