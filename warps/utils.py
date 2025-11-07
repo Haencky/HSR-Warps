@@ -317,10 +317,7 @@ def check_banner():
     """
     Tries to match an item to a banner
     """
-    print('hello_world')
     for b in Banner.objects.exclude(item_id__isnull=False).exclude(gacha_type__gacha_type=1):
-        print('hello world')
-        print(b)
         w = W.objects.filter(gacha_id=b.id, item_id__rarity=5).exclude(item_id__in=LOST)
         if w:
             item = w[0].item_id

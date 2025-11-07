@@ -60,6 +60,7 @@ def add_pulls(request:HttpRequest):
             url = form.cleaned_data['url']
             for t in types:
                 f = fetch_info(url, t)
+                print(f)
                 if f['new_warps'] > 0:
                     messages.success(request, f'{f['gacha_type']}: {f['new_warps']} Warps added!')
         check_banner()
