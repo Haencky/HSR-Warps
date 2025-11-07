@@ -10,4 +10,6 @@ COPY manage.py /app/manage.py
 
 EXPOSE 9001
 
-CMD ["python", "manage.py", "runserver", "0.0.0.0:9001"]
+ENTRYPOINT [ "python", "manage.py" ]
+
+CMD ["runserver", "0.0.0.0:9001"]
