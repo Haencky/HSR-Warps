@@ -3,4 +3,3 @@
 **/*.py[co]
 media/
 *.sqlite3
-warps/migrations/0*.py
