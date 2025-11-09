@@ -49,7 +49,7 @@ def index(request):
 
 def banners(request: HttpRequest):
     items = json.dumps(list(Item.objects.order_by('name').values('name', 'item_id', 'image', 'eng_name')))
-    w_per_banner = Warp.objects.all().values('gacha_id', 'gacha_id__item_id__image', 'gacha_id__gacha_type__gacha_type').annotate(count=Count('id'), obtained=Max('item_id__rarity', filter=~Q(item_id__item_id__in=LOST)), ff=Count('item_id__rarity', filter=Q(item_id__item_id__in=LOST))).order_by('gacha_id__id')
+    w_per_banner = Warp.objects.all().values('gacha_id', 'gacha_id__item_id__image', 'gacha_id__gacha_type__gacha_type').annotate(count=Count('id'), obtained=Max('item_id__rarity', filter=~Q(item_id__item_id__in=LOST)), ff=Count('item_id__rarity', filter=Q(item_id__item_id__in=LOST))).order_by('-gacha_id__id')
     return render(request, 'banners.html', {'banner': w_per_banner, 'items': items})
 
 #@login_required(login_url='/login')
@@ -74,7 +74,7 @@ def add_items_manual(request:HttpRequest):
     if request.method == 'POST':
         form = AddItemManual(request.POST)
         if form.is_valid():
-            name = form.cleaned_data['eng_name']
+            name:str = form.cleaned_data['eng_name']
             try:
                 ids = requests.get(url=ITEM_ID_URL).json()
             except:
@@ -87,7 +87,7 @@ def add_items_manual(request:HttpRequest):
                 fetch_img = requests.get(img_url) # fetch image
                 image_bytes = BytesIO(fetch_img.content) # save to byte stream
                 django_file = ImageFile(image_bytes, name=img_name)
-                wiki = WIKI_URL + name
+                wiki = WIKI_URL + name.replace(' ', '_')
                 if item_id in LOST: wiki += '_(Light_Cone)'
                 rarity = 5 if item_id >= 23_000 else -1
                 Item.objects.create(
