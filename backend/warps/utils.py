@@ -8,6 +8,7 @@ from django.core.files.images import ImageFile
 from io import BytesIO
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 from .const import *
+from .serializers import *
 from collections import Counter
 import time
 
@@ -359,7 +360,7 @@ class WarpAnalyser():
                 winrate = None
                 last_win = filtered.filter(item_id__item_id__in=LOST).latest('item_id')
 
-            types[f'{g_id.name}'] = {'pity': pity, 'warranted': warranted, 'wr': winrate, 'c': amount, 'last_win': last_win, 'max_pity': max_pity, 'jade': jade, 'euro': euro, 'id': g_id}
+            types[f'{g_id.name}'] = {'pity': pity, 'warranted': warranted, 'wr': winrate, 'c': amount, 'last_win': WarpSerializer(last_win).data if last_win else None, 'max_pity': max_pity, 'jade': jade, 'euro': euro, 'id': g_id.id}
         return types
 
     def warps_per_banner(self) -> dict:
@@ -399,7 +400,7 @@ class WarpAnalyser():
 
         items = W.objects.filter(item_id=id)
         count = items.count()
-        item = Item.objects.get(item_id=id)
+        item = ItemSerializer(Item.objects.get(item_id=id)).data
 
         return {'item': item, 'count': count}
     

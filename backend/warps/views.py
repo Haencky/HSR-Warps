@@ -1,13 +1,17 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpRequest, JsonResponse
 from django.contrib import messages
-from django.db.models import Count, Max, Q
+from django.db.models import Count, Max, Q, F
 from django.core.files.images import ImageFile
 from django.utils.safestring import mark_safe
-import json
 
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from  rest_framework import status
+from .serializers import *
+
+import json
 import requests
 from io import BytesIO
 from Levenshtein import distance
@@ -30,44 +34,53 @@ def get_suggestion(input:str, correct:list, max_distance=3, top_n=5):
             distances[n] = d
     return sorted(distances.items(), key=operator.itemgetter(1))[:top_n]
 
-# Create your views here.
-def index(request):
+# Create your views here
+@api_view(['GET'])
+def index_api(request):
     types = Analyser.warps_per_type()
-    items = json.dumps(list(Item.objects.order_by('name').values('name', 'item_id', 'image', 'eng_name')))
-
     labels, data = [], []
     
     queryset = Warp.objects.select_related('item_id').values('item_id__rarity').annotate(count=Count('id')).order_by('item_id__rarity')
     for warp in queryset:
         labels.append(warp['item_id__rarity'])
         data.append(int(warp['count']))
-
-    labels = json.dumps(labels)
+ 
     data = json.dumps(data)
+    labels = json.dumps(labels)
 
-    return render(request, 'index.html', {'types': types, 'items': items, 'history_data': data, 'history_labels': labels})
 
+    return Response({'types': types, 'items': ItemSerializer(Item.objects.all(), many=True).data, 'history_data': data, 'history_labels': labels})
+
+@api_view(['GET'])
 def banners(request: HttpRequest):
-    items = json.dumps(list(Item.objects.order_by('name').values('name', 'item_id', 'image', 'eng_name')))
-    w_per_banner = Warp.objects.all().values('gacha_id', 'gacha_id__item_id__image', 'gacha_id__gacha_type__gacha_type').annotate(count=Count('id'), obtained=Max('item_id__rarity', filter=~Q(item_id__item_id__in=LOST)), ff=Count('item_id__rarity', filter=Q(item_id__item_id__in=LOST))).order_by('-gacha_id__id')
-    return render(request, 'banners.html', {'banner': w_per_banner, 'items': items})
+    items = Item.objects.all().order_by('name')
+    w_per_banner = Warp.objects.all().values('gacha_id', item=F('gacha_id__item_id__name'), item_image=F('gacha_id__item_id__image')).annotate(count=Count('id'), obtained=Max('item_id__rarity', filter=~Q(item_id__item_id__in=LOST)), ff=Count('item_id__rarity', filter=Q(item_id__item_id__in=LOST))).order_by('-gacha_id')
+    return Response({'banner': WarpsPerBannerSerializer(w_per_banner, many=True, context={'request': request}).data, 'items': ItemSerializer(items, many=True).data})
 
-#@login_required(login_url='/login')
+@api_view(['POST'])
 def add_pulls(request:HttpRequest):
-    if request.method == 'POST':
-        form = AddPullsForm(request.POST)
-        if form.is_valid():
-            url = form.cleaned_data['url']
-            for t in types:
-                f = fetch_info(url, t)
-                print(f)
-                if f['new_warps'] > 0:
-                    messages.success(request, f'{f['gacha_type']}: {f['new_warps']} Warps added!')
-        check_banner()
-            
-    else:
-        form = AddPullsForm()
-    return render(request, 'add_pulls.html', {'form': form})
+    url = request.data.get('url')
+    if not url:
+        return Response(
+            {'error': 'No URL provided'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    results = []
+    for t in types:
+        f = fetch_info(url, t)
+        print(f)
+        if f['new_warps'] > 0:
+            results.append({
+                'gacha_type': f['gacha_type'],
+                'new_warps': f['new_warps']
+            })
+    check_banner()
+    return Response({
+        'message': 'Imported Warps',
+        'details': results
+    })
+
 
 def add_items_manual(request:HttpRequest):
     items = json.dumps(list(Item.objects.order_by('name').values('name', 'item_id', 'image', 'eng_name')))
@@ -109,45 +122,16 @@ def add_items_manual(request:HttpRequest):
     else:
         form = AddItemManual()
     return render(request, 'add_item.html', {'form': form, 'items': items})
-def login_view(request):
-    """
-    Login View
-    """
-    if request.method == 'POST':
-        form = LoginForm(request.POST)
-        if form.is_valid():
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password']
-            user = authenticate(request, username=username, password=password)
-            if user is not None:
-                login(request, user)
-                return redirect('home')
-        else:
-            form.add_error(None, 'Login failed')
-    else:
-        form = LoginForm()
-    return render(request, 'login.html', {'form': form})
-
-def register_view(request):
-    if request.method == "POST":
-        form = RegistrationForm(request.POST)
-        if form.is_valid():
-            user = form.save(commit=False)
-            user.save()
-            login(request, user)
-            return redirect('home')
-    else:
-        form = RegistrationForm()
-    return render(request, 'register.html', {'form': form})
 
 def list_characters(request: HttpRequest):
     characters = Analyser.characters()
     return render(request, 'characters.html', characters)
 
+@api_view(['GET'])
 def detail_item(request:HttpRequest, id:int):
-    items = json.dumps(list(Item.objects.order_by('name').values('name', 'item_id', 'image', 'eng_name')))
+    items = Item.objects.order_by('name')
 
-    return render(request, 'details.html', {'ret': Analyser.details(id), 'items': items})
+    return Response({'ret': Analyser.details(id), 'items': ItemSerializer(items, many=True).data})
 
 def detail_banner(request: HttpRequest, id:int):
     items = json.dumps(list(Item.objects.order_by('name').values('name', 'item_id', 'image', 'eng_name')))
@@ -158,27 +142,4 @@ def detail_banner(request: HttpRequest, id:int):
     stats = {'labels': labels, 'counts': counts}
     banner_item = Banner.objects.get(gacha_id=id)
 
-
     return render(request, 'detail_banner.html', {'items': items})
-
-def api_types(request:HttpRequest, type:int) -> JsonResponse:
-    w_per_type = list(Warp.objects.filter(gacha_id__gacha_type=type).values('item_id__rarity').annotate(count=Count('id')).order_by('item_id__rarity'))
-    counts = [x['count'] for x in w_per_type]
-    labels = ['⭐⭐⭐', '⭐⭐⭐⭐', '⭐⭐⭐⭐⭐']
-
-    return JsonResponse({
-        'labels': labels,
-        'data': counts,
-        'title': 'Pulls nach Rarity'
-    })
-
-def api_banner(request: HttpRequest, banner: int) -> JsonResponse:
-    w_per_banner = list(Warp.objects.filter(gacha_id=banner).values('item_id__rarity').annotate(count=Count('id')).order_by('item_id__rarity'))
-    counts = [x['count'] for x in w_per_banner]
-    labels = ['⭐⭐⭐', '⭐⭐⭐⭐', '⭐⭐⭐⭐⭐']
-
-    return JsonResponse({
-        'labels': labels,
-        'data': counts,
-        'title': 'Pulls per Rarity' 
-    })
