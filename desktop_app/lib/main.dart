@@ -1,5 +1,6 @@
 import 'package:desktop_app/screens/banner/banner_screen.dart';
 import 'package:desktop_app/screens/dashboard/dashboard_screen.dart';
+import 'package:desktop_app/screens/settings/settings_screen.dart';
 import 'package:flutter/material.dart';
 
 void main() => runApp(const DesktopApp());
@@ -17,7 +18,8 @@ class DesktopApp extends StatelessWidget {
     routes: {
       '/dashboard': (context) => const DashboardScreen(),
       //'/items': (context) => const ,
-      '/banner': (context) => const BannerScreen()
+      '/banner': (context) => const BannerScreen(),
+      '/settings': (context) => const SettingsScreen(),
     },
   );
 }

@@ -1,23 +1,41 @@
 import 'dart:convert';
 
 import 'package:desktop_app/services/currency_calc.dart';
+import 'package:desktop_app/services/settings_service.dart';
 import 'package:flutter/material.dart';
 
 import 'package:desktop_app/services/api_service.dart' show ApiService;
+import 'package:http/http.dart' as http;
 
 Widget indexGridView() => Container(
   child: _buildMainContent(),
 );
 
+Future<Map<String, dynamic>> _fetchData() async {
+  final results = await Future.wait([
+    ApiService.fetchApi(''),
+    SettingsService.getSettings(),
+  ]);
+
+  return {
+    'apiResponse': results[0],
+    'settings': results[1]
+  };
+}
+
 Widget _buildMainContent() {
   return FutureBuilder(
-    future: ApiService.fetchApi(''),
+    future: _fetchData(),
     builder: (context, snapshot) {
       if (snapshot.connectionState == ConnectionState.waiting) {
         return const Center(child: CircularProgressIndicator());
       }
-      if (snapshot.hasData && snapshot.data!.statusCode == 200) {
-        final Map<String, dynamic> responseData = jsonDecode(snapshot.data!.body);
+      if (snapshot.hasData) {
+        final response = snapshot.data!['apiResponse'] as http.Response;
+        final settings = snapshot.data!['settings'] as Map<String, String>;
+        final String savedCurrency = settings['currency'] ?? '\$';
+
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
         final Map<String, dynamic> types = responseData['types'];
         return Container(
           padding: const EdgeInsets.all(20),
@@ -76,7 +94,7 @@ Widget _buildMainContent() {
                               ),
                             ]
                           ),
-                          Text('${typeData['jade']} Jade (${CurrencyCalc.convert(typeData['jade'], 'eur')}€)'),
+                          Text('${typeData['jade']} Jade (${CurrencyCalc.convert(typeData['jade'], savedCurrency)}$savedCurrency)'),
                           typeData['wr'] != null ? Text('Winrate: ${typeData['wr']}%') : Text('')
                         ]
                       )
