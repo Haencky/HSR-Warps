@@ -127,3 +127,8 @@ def list_gacha_types(request):
 @api_view(['GET'])
 def item_types(request):
     return Response(ItemTypeSerializer(ItemType.objects.all(), many=True).data)
+
+@api_view(['GET'])
+def warps_per_item(request):
+    warps_per_item = Warp.objects.all().values('item_id').annotate(item_image=F('item_id__image'), count=Count('item_id'), item_name=F('item_id__name'), item_type=F('item_id__typ__name'), item_rarity=F('item_id__rarity'))
+    return Response(WarpsPerItemSerializer(warps_per_item, many=True, context={'request': request}).data)

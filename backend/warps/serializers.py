@@ -61,3 +61,19 @@ class WarpsPerBannerSerializer(serializers.Serializer):
         if request is not None:
             return settings.MEDIA_URL + image_path
         return settings.MEDIA_URL + str(image_path)
+    
+class WarpsPerItemSerializer(serializers.Serializer):
+    item_name = serializers.CharField(required=True)
+    count = serializers.IntegerField(required=True)
+    item_image = serializers.SerializerMethodField()
+    item_type = serializers.CharField(required=True)
+    item_rarity = serializers.IntegerField(required=True)
+
+    def get_item_image(self, obj):
+        image_path = obj.get('item_image')
+        if not image_path:
+            return None
+        request = self.context.get('request')
+        if request is not None:
+            return settings.MEDIA_URL + image_path
+        return settings.MEDIA_URL + str(image_path)
