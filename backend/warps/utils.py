@@ -312,7 +312,7 @@ def fetch_info(url:str, gacha_type: int) -> dict:
             time.sleep(0.1)
         return counter
     fetched = _fetch(url)
-    return {'gacha_type': gacha_type, 'new_warps': fetched}
+    return fetched
 
 def check_banner():
     """

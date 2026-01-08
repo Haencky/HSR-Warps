@@ -9,8 +9,6 @@ Widget indexGridView() => Container(
   child: _buildMainContent(),
 );
 
-
-
 Widget _buildMainContent() {
   return FutureBuilder(
     future: ApiService.fetchApi(''),
@@ -22,7 +20,7 @@ Widget _buildMainContent() {
         final Map<String, dynamic> responseData = jsonDecode(snapshot.data!.body);
         final Map<String, dynamic> types = responseData['types'];
         return Container(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(20),
           child: Column(
             spacing: 20,
             children: types.keys.map((typeName) {

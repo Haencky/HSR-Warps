@@ -1,3 +1,4 @@
+import 'package:desktop_app/screens/banner/banner_screen.dart';
 import 'package:desktop_app/screens/dashboard/dashboard_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -9,7 +10,14 @@ class DesktopApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) => MaterialApp(
     title: 'Honkai: Starrail Warptracker',
-    home: indexScaffold()
+    home: const DashboardScreen(),
+    theme: ThemeData(
+      primarySwatch: Colors.blue
+    ),
+    routes: {
+      '/dashboard': (context) => const DashboardScreen(),
+      //'/items': (context) => const ,
+      '/banner': (context) => const BannerScreen()
+    },
   );
-
 }

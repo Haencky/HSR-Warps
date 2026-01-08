@@ -49,13 +49,12 @@ def index_api(request):
     labels = json.dumps(labels)
 
 
-    return Response({'types': types, 'items': ItemSerializer(Item.objects.all(), many=True).data, 'history_data': data, 'history_labels': labels})
+    return Response({'types': types, 'history_data': data, 'history_labels': labels})
 
 @api_view(['GET'])
 def banners(request: HttpRequest):
-    items = Item.objects.all().order_by('name')
-    w_per_banner = Warp.objects.all().values('gacha_id', item=F('gacha_id__item_id__name'), item_image=F('gacha_id__item_id__image')).annotate(count=Count('id'), obtained=Max('item_id__rarity', filter=~Q(item_id__item_id__in=LOST)), ff=Count('item_id__rarity', filter=Q(item_id__item_id__in=LOST))).order_by('-gacha_id')
-    return Response({'banner': WarpsPerBannerSerializer(w_per_banner, many=True, context={'request': request}).data, 'items': ItemSerializer(items, many=True).data})
+    w_per_banner = Warp.objects.all().values('gacha_id', item=F('gacha_id__item_id__name'), item_image=F('gacha_id__item_id__image'), item_type=F('gacha_id__item_id__typ__name'), hsr_gacha_id=F('gacha_id__gacha_id')).annotate(count=Count('id'), obtained=Max('item_id__rarity', filter=~Q(item_id__item_id__in=LOST)), ff=Count('item_id__rarity', filter=Q(item_id__item_id__in=LOST))).order_by('-gacha_id')
+    return Response(WarpsPerBannerSerializer(w_per_banner, many=True, context={'request': request}).data)
 
 @api_view(['POST'])
 def add_pulls(request:HttpRequest):
@@ -66,15 +65,7 @@ def add_pulls(request:HttpRequest):
             status=status.HTTP_400_BAD_REQUEST
         )
     
-    results = []
-    for t in types:
-        f = fetch_info(url, t)
-        print(f)
-        if f['new_warps'] > 0:
-            results.append({
-                'gacha_type': f['gacha_type'],
-                'new_warps': f['new_warps']
-            })
+    results = [{str(GachaType.objects.filter(gacha_type=t).values_list('name', flat=True)[0]): fetch_info(url, t)} for t in types if GachaType.objects.filter(gacha_type=t).exists()]
     check_banner()
     return Response({
         'message': 'Imported Warps',
@@ -123,23 +114,16 @@ def add_items_manual(request:HttpRequest):
         form = AddItemManual()
     return render(request, 'add_item.html', {'form': form, 'items': items})
 
-def list_characters(request: HttpRequest):
-    characters = Analyser.characters()
-    return render(request, 'characters.html', characters)
-
 @api_view(['GET'])
 def detail_item(request:HttpRequest, id:int):
     items = Item.objects.order_by('name')
 
-    return Response({'ret': Analyser.details(id), 'items': ItemSerializer(items, many=True).data})
+    return Response(Analyser.details(id))
 
-def detail_banner(request: HttpRequest, id:int):
-    items = json.dumps(list(Item.objects.order_by('name').values('name', 'item_id', 'image', 'eng_name')))
+@api_view(['GET'])
+def list_gacha_types(request):
+    return Response(GachaTypeSerializer(GachaType.objects.all(), many=True).data)
 
-    w_per_banner = list(Warp.objects.filter(gacha_id=id).values('item_id__rarity').annotate(count=Count('id')).order_by('item_id__rarity'))
-    counts = [x['count'] for x in w_per_banner]
-    labels = ['⭐⭐⭐', '⭐⭐⭐⭐', '⭐⭐⭐⭐⭐']
-    stats = {'labels': labels, 'counts': counts}
-    banner_item = Banner.objects.get(gacha_id=id)
-
-    return render(request, 'detail_banner.html', {'items': items})
+@api_view(['GET'])
+def item_types(request):
+    return Response(ItemTypeSerializer(ItemType.objects.all(), many=True).data)

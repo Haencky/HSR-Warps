@@ -12,4 +12,9 @@ class ApiService {
     List<dynamic> data = jsonDecode(r.body);
     return data;
   }
+
+  static Future<http.Response> sendToApi(String endpoint, Map<String, String> body) async => await http.post(
+    Uri.parse('$baseUrl/$endpoint/'),
+    body: body
+  ); 
 }

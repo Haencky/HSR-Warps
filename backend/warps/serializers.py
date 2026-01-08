@@ -44,6 +44,8 @@ class WarpsPerBannerSerializer(serializers.Serializer):
     warp_id = serializers.IntegerField(required=False)
     item = serializers.CharField(required=False)
     item_image = serializers.SerializerMethodField()
+    item_type = serializers.CharField(required=False)
+    hsr_gacha_id = serializers.IntegerField(required=True)
     uid = serializers.IntegerField(required=False)
     item_id = serializers.IntegerField(required=False)
     time = serializers.DateTimeField(required=False)
@@ -57,5 +59,5 @@ class WarpsPerBannerSerializer(serializers.Serializer):
             return None
         request = self.context.get('request')
         if request is not None:
-            return request.build_absolute_uri(settings.MEDIA_URL + str(image_path))
+            return settings.MEDIA_URL + image_path
         return settings.MEDIA_URL + str(image_path)
