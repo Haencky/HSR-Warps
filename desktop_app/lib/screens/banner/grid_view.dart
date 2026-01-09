@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:desktop_app/services/api_service.dart';
+import 'package:desktop_app/services/settings_service.dart';
 import 'package:flutter/material.dart';
 
 class BannerGridView extends StatefulWidget {
@@ -15,6 +16,8 @@ class _BannerGridViewState extends State<BannerGridView> {
   List<dynamic> itemTypes = [];
   String? activeFilter;
   bool isLoading = true;
+  String url = '';
+  String port = '';
   
   final double sizeStackDescription = 20;
 
@@ -26,9 +29,10 @@ class _BannerGridViewState extends State<BannerGridView> {
 
   Future<void> _loadData() async {
     try {
-      final response = await Future.wait([
+      List<dynamic> response = await Future.wait([
         ApiService.fetchApi('banners'),
-        ApiService.fetchApi('item_types')
+        ApiService.fetchApi('item_types'),
+        SettingsService.getSettings()
       ]);
       if (response[0].statusCode == 200 && response[1].statusCode == 200) {
         setState(() {
@@ -37,6 +41,9 @@ class _BannerGridViewState extends State<BannerGridView> {
           itemTypes = jsonDecode(response[1].body);
           displayedBanners = List.from(allBanners);
           isLoading = false;
+          var settings = response[2];
+          url = settings['url'];
+          port = settings['port'];
         });
       }
     } catch (e) {
@@ -91,7 +98,6 @@ class _BannerGridViewState extends State<BannerGridView> {
           ),
         ),
         
-        // Das GridView
         Expanded(
           child: Container(
             padding: const EdgeInsets.all(20),
@@ -124,7 +130,7 @@ class _BannerGridViewState extends State<BannerGridView> {
       alignment: Alignment.topLeft,
       children: [
         Image.network(
-          '${ApiService.baseUrl}${b["item_image"]}',
+          '$url:$port${b["item_image"]}',
           width: 770,
           height: 1000,
           errorBuilder: (context, object, stackTrace) => SizedBox(
