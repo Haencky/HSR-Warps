@@ -114,7 +114,7 @@ class _ItemBodyState extends State<ItemBody> {
                   }),
                 ),
               ActionChip(
-                label: const Text('Pulls'),
+                label: const Text('Count'),
                 avatar: const Icon(Icons.sort),
                 onPressed: _sortByCount,
               ),

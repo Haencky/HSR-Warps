@@ -34,6 +34,8 @@ Widget _buildMainContent() {
         final response = snapshot.data!['apiResponse'] as http.Response;
         final settings = snapshot.data!['settings'] as Map<String, String>;
         final String savedCurrency = settings['currency'] ?? '\$';
+        final String url = settings['url'] ?? 'http://127.0.0.1';
+        final String port = settings['port'] ?? '8000';
 
         final Map<String, dynamic> responseData = jsonDecode(response.body);
         final Map<String, dynamic> types = responseData['types'];
@@ -51,7 +53,7 @@ Widget _buildMainContent() {
                       child: Stack(
                         children: [
                           Image.network(
-                            "${ApiService.baseUrl}${typeData['last_win']['item_image']}",
+                            "$url:$port${typeData['last_win']['item_image']}",
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return Icon(Icons.broken_image, color: Colors.red);

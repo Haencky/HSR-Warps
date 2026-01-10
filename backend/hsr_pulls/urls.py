@@ -32,4 +32,5 @@ urlpatterns = [
     path('add_item/', add_items_manual, name='add_item'),
     path('gacha_types', list_gacha_types, name='list_gacha_types'),
     path('item_warps', warps_per_item, name='warps_per_item'),
+    path('items', items, name='items'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
