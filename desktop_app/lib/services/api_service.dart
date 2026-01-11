@@ -11,7 +11,7 @@ class ApiService {
     final String url = settings['url']!;
     final String port = settings['port']!;
 
-    return await http.get(Uri.parse('$url:$port/$endpoint'));
+    return await http.get(Uri.parse('$url:$port/api/$endpoint'));
   }
 
   static Future<List<dynamic>> getGachaTypes() async {

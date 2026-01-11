@@ -22,15 +22,13 @@ from warps.views import *
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', index_api, name='home'),
-    path('add/', add_pulls, name='add'),
-    #path('characters/', list_characters, name='characters'),
-    path('banners', banners, name='list_banners'),
-    #path('detail_banner/<int:id>/', detail_banner, name='detail_banner'),
-    path('item_types', item_types, name='item_types'),
-    path('details/<int:id>/', detail_item, name='details'),
-    path('add_item/', add_items_manual, name='add_item'),
-    path('gacha_types', list_gacha_types, name='list_gacha_types'),
-    path('item_warps', warps_per_item, name='warps_per_item'),
-    path('items', items, name='items'),
+    path('api/dashboard', index_api),
+    path('api/add', add_pulls_api),
+    path('api/banners', banners_api),
+    path('api/item_types', item_types_api),
+    path('api/details/<int:id>', detail_item_api),
+    path('api/add_item', add_items_manual_api),
+    path('api/gacha_types', list_gacha_types_api),
+    path('api/item_warps', warps_per_item_api),
+    path('api/items', items_api)
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

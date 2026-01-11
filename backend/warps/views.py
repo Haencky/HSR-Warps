@@ -52,12 +52,12 @@ def index_api(request):
     return Response({'types': types, 'history_data': data, 'history_labels': labels})
 
 @api_view(['GET'])
-def banners(request: HttpRequest):
+def banners_api(request: HttpRequest):
     w_per_banner = Warp.objects.all().values('gacha_id', item=F('gacha_id__item_id__name'), item_image=F('gacha_id__item_id__image'), item_type=F('gacha_id__item_id__typ__name'), hsr_gacha_id=F('gacha_id__gacha_id')).annotate(count=Count('id'), obtained=Max('item_id__rarity', filter=~Q(item_id__item_id__in=LOST)), ff=Count('item_id__rarity', filter=Q(item_id__item_id__in=LOST))).order_by('-gacha_id')
     return Response(WarpsPerBannerSerializer(w_per_banner, many=True, context={'request': request}).data)
 
 @api_view(['POST'])
-def add_pulls(request:HttpRequest):
+def add_pulls_api(request:HttpRequest):
     url = request.data.get('url')
     if not url:
         return Response(
@@ -73,7 +73,7 @@ def add_pulls(request:HttpRequest):
     })
 
 @api_view(['POST'])
-def add_items_manual(request:HttpRequest):
+def add_items_manual_api(request:HttpRequest):
     name:str = request.data.get('eng_name')
     suggestions = []
     msg = ""
@@ -108,24 +108,24 @@ def add_items_manual(request:HttpRequest):
     return Response({'message': msg if msg else f'Added item {name}','id': item_id if item_id else None, 'suggestions': suggestions})
 
 @api_view(['GET'])
-def detail_item(request:HttpRequest, id:int):
+def detail_item_api(request:HttpRequest, id:int):
     items = Item.objects.order_by('name')
 
     return Response(Analyser.details(id))
 
 @api_view(['GET'])
-def list_gacha_types(request):
+def list_gacha_types_api(request):
     return Response(GachaTypeSerializer(GachaType.objects.all(), many=True).data)
 
 @api_view(['GET'])
-def item_types(request):
+def item_types_api(request):
     return Response(ItemTypeSerializer(ItemType.objects.all(), many=True).data)
 
 @api_view(['GET'])
-def warps_per_item(request):
+def warps_per_item_api(request):
     warps_per_item = Warp.objects.all().values('item_id').annotate(item_image=F('item_id__image'), count=Count('item_id'), item_name=F('item_id__name'), item_type=F('item_id__typ__name'), item_rarity=F('item_id__rarity')).order_by('item_name')
     return Response(WarpsPerItemSerializer(warps_per_item, many=True, context={'request': request}).data)
 
 @api_view(['GET'])
-def items(request):
+def items_api(request):
     return Response(ItemSerializer(Item.objects.all().prefetch_related('warp_set').order_by('name'), many=True).data)
