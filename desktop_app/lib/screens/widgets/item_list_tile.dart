@@ -27,17 +27,25 @@ class ItemListTile extends StatelessWidget {
       ),
       child: Row(
         children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.horizontal(left: Radius.circular(12)),
-            child: Container(
-              padding: EdgeInsets.all(10),
-              child: Image.network(
-                '$baseUrl${item['image']}',
-                width: 375,
-                height: 500,
-                fit: BoxFit.cover
-              ),
-            ),
+          Container(
+            padding: EdgeInsets.all(10),
+            child: Stack(
+              children: [ 
+                Container(
+                  padding: EdgeInsets.all(10),
+                  child: Image.network(
+                    '$baseUrl${item['image']}',
+                    width: 375,
+                    height: 500,
+                    fit: BoxFit.cover
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.all(4),
+                  child: item['obtained'] ? Icon(Icons.check, color: Colors.green) : Icon(Icons.close, color: Colors.red),
+                )
+              ],
+            )
           ),
           const SizedBox(width: 16),
           Expanded(

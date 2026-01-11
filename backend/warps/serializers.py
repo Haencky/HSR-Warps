@@ -16,9 +16,13 @@ class ItemSerializer(serializers.ModelSerializer):
     typ_name = serializers.CharField(source='typ.name', read_only=True)
     path_name = serializers.CharField(source='path.name', read_only=True)
     path_icon = serializers.ImageField(source='path.icon', read_only=True)
+    obtained = serializers.SerializerMethodField()
     class Meta:
         model = Item
         fields = '__all__'
+    
+    def get_obtained(self, obj):
+        return obj.warp_set.exists()
 
 class GachaTypeSerializer(serializers.ModelSerializer):
     class Meta:

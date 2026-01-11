@@ -128,4 +128,4 @@ def warps_per_item(request):
 
 @api_view(['GET'])
 def items(request):
-    return Response(ItemSerializer(Item.objects.all().order_by('name'), many=True).data)
+    return Response(ItemSerializer(Item.objects.all().prefetch_related('warp_set').order_by('name'), many=True).data)
