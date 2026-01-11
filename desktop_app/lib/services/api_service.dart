@@ -4,7 +4,7 @@ import 'package:desktop_app/services/settings_service.dart';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static String baseUrl = 'http://127.0.0.1:8000';
+  static const String itemIdsURL = 'https://haencky.github.io/HSR-Warps/itemIDs.json';
 
   static Future<http.Response> fetchApi(String endpoint) async { 
     final settings = await SettingsService.getSettings();
@@ -30,4 +30,6 @@ class ApiService {
       body: body
     ); 
   }
+
+  static Future<http.Response> fetchItemIds() async => await http.get(Uri.parse(itemIdsURL));
 }

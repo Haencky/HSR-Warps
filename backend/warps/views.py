@@ -20,7 +20,7 @@ import operator
 from .utils import fetch_info, WarpAnalyser, check_banner
 from .models import *
 from .forms import *
-from .const import LOST, ITEM_ID_URL, IMAGE_URL, WIKI_URL
+from .const import LOST, ITEM_ID_URL, IMAGE_URL, WIKI_URL, DOUBLES
 
 types = [1, 2, 11, 12, 21, 22]
 
@@ -32,7 +32,7 @@ def get_suggestion(input:str, correct:list, max_distance=3, top_n=5):
         d = distance(input.lower(), n.lower())
         if d <= max_distance:
             distances[n] = d
-    return sorted(distances.items(), key=operator.itemgetter(1))[:top_n]
+    return sorted(distances.keys())[:top_n]
 
 # Create your views here
 @api_view(['GET'])
@@ -72,47 +72,40 @@ def add_pulls(request:HttpRequest):
         'details': results
     })
 
-
+@api_view(['POST'])
 def add_items_manual(request:HttpRequest):
-    items = json.dumps(list(Item.objects.order_by('name').values('name', 'item_id', 'image', 'eng_name')))
-    if request.method == 'POST':
-        form = AddItemManual(request.POST)
-        if form.is_valid():
-            name:str = form.cleaned_data['eng_name']
-            try:
-                ids = requests.get(url=ITEM_ID_URL).json()
-            except:
-                messages.error(request, 'Error loading Item IDs Json File')
-            try:
-                wanted = ids[name]
-                item_id = wanted
-                img_url = f'{IMAGE_URL}{"character_" if item_id < 20_000 else "light_cone_"}portrait/{item_id}.png'
-                img_name = f'{name}.png'
-                fetch_img = requests.get(img_url) # fetch image
-                image_bytes = BytesIO(fetch_img.content) # save to byte stream
-                django_file = ImageFile(image_bytes, name=img_name)
-                wiki = WIKI_URL + name.replace(' ', '_')
-                if item_id in LOST: wiki += '_(Light_Cone)'
-                rarity = 5 if item_id >= 23_000 else -1
-                Item.objects.create(
-                    item_id = item_id,
-                    eng_name = name,
-                    name = name,
-                    wiki = wiki,
-                    image = django_file,
-                    rarity = rarity
-                )
-                return redirect(f'/admin/warps/item/{item_id}/change')
-            except KeyError:
-                suggestions = get_suggestion(name, list(ids.keys()))
-                suggestion_list_html = '<br>'.join([
-                    f'<strong>{s[0]}</strong>' 
-                    for s in suggestions
-                ])
-                messages.error(request, mark_safe(f'Could not find id to given name: "{name}"!<br>Try:<br>{suggestion_list_html}'))
-    else:
-        form = AddItemManual()
-    return render(request, 'add_item.html', {'form': form, 'items': items})
+    name:str = request.data.get('eng_name')
+    suggestions = []
+    msg = ""
+    try:
+        ids = requests.get(url=ITEM_ID_URL).json()
+    except:
+        messages.error(request, 'Error loading Item IDs Json File')
+    try:
+        wanted = ids[name]
+        item_id = wanted
+        img_url = f'{IMAGE_URL}{"character_" if item_id < 20_000 else "light_cone_"}portrait/{item_id}.png'
+        img_name = f'{name}.png'
+        fetch_img = requests.get(img_url) # fetch image
+        image_bytes = BytesIO(fetch_img.content) # save to byte stream
+        django_file = ImageFile(image_bytes, name=img_name)
+        wiki = WIKI_URL + name.replace(' ', '_')
+        if item_id in DOUBLES: wiki += '_(Light_Cone)'
+        rarity = 5 if item_id >= 23_000 else -1
+        Item.objects.create(
+            item_id = item_id,
+            eng_name = name,
+            name = name,
+            wiki = wiki,
+            image = django_file,
+            rarity = rarity
+        )
+        #return redirect(f'/admin/warps/item/{item_id}/change')
+    except KeyError:
+        suggestions = get_suggestion(name, list(ids.keys()))
+        msg = f"Could not find '{name}'"
+            
+    return Response({'message': msg if msg else f'Added item {name}','id': item_id if item_id else None, 'suggestions': suggestions})
 
 @api_view(['GET'])
 def detail_item(request:HttpRequest, id:int):

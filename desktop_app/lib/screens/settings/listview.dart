@@ -2,6 +2,8 @@ import 'package:desktop_app/services/settings_service.dart';
 import 'package:flutter/material.dart';
 
 class SettingsBody extends StatefulWidget {
+  const SettingsBody({super.key});
+
   @override
   _SettingsPageState createState() => _SettingsPageState();
 }
