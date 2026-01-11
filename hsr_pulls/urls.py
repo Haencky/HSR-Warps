@@ -33,4 +33,14 @@ urlpatterns = [
     path('add_item/', add_items_manual, name='add_item'),
     path('api/type/<int:type>/', api_types, name='api_types'),
     path('api/banner/<int:banner>', api_banner, name='api_banner'),
+     path('api/dashboard', index_api),
+    path('api/add', add_pulls_api),
+    path('api/banners', banners_api),
+    path('api/item_types', item_types_api),
+    path('api/details/<int:id>', detail_item_api),
+    path('api/add_item', add_items_manual_api),
+    path('api/gacha_types', list_gacha_types_api),
+    path('api/item_warps', warps_per_item_api),
+    path('api/items', items_api)
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
