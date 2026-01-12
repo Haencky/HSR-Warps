@@ -13,7 +13,7 @@ Widget indexGridView() => Container(
 
 Future<Map<String, dynamic>> _fetchData() async {
   final results = await Future.wait([
-    ApiService.fetchApi('dashboard'),
+    ApiService.fetchApi('api/dashboard'),
     SettingsService.getSettings(),
   ]);
 

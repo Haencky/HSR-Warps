@@ -64,7 +64,7 @@ class SideDrawer extends StatelessWidget {
       title = 'No gacha URL found';
       content = Text('Unabble to find Gacha URL on this device');
     } else if (url.startsWith('https://')) { // valid gacha url
-      var response = await ApiService.sendToApi('add', {'url': url});
+      var response = await ApiService.sendToApi('api/add', {'url': url});
       Map<String, dynamic> data = jsonDecode(response.body);
       List<dynamic> details = data['details'];
 

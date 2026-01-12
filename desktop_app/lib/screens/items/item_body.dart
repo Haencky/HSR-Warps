@@ -43,8 +43,8 @@ class _ItemBodyState extends State<ItemBody> {
   Future<void> _loadData() async {
     try {
       List<dynamic> response = await Future.wait([
-        ApiService.fetchApi('item_warps'),
-        ApiService.fetchApi('item_types'),
+        ApiService.fetchApi('api/item_warps'),
+        ApiService.fetchApi('api/item_types'),
         SettingsService.getSettings()
       ]);
       if (response[0].statusCode == 200 && response[1].statusCode == 200) {

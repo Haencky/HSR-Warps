@@ -42,7 +42,7 @@ class _SearchItemState extends State<MainScaffold> {
 
   Future<void> _loadData() async {
     List<dynamic> response = await Future.wait([
-      ApiService.fetchApi('items'),
+      ApiService.fetchApi('api/items'),
       SettingsService.getSettings()
     ]);
     if (response[0].statusCode == 200) {
@@ -204,7 +204,7 @@ class _SearchItemState extends State<MainScaffold> {
                               onPressed: addedItem.isEmpty ? null : () async {
                                 setStateInside(() => isLoading = true);
                                 final List<dynamic> response = await Future.wait([
-                                  ApiService.sendToApi('add_item', {'eng_name': addedItem}),
+                                  ApiService.sendToApi('api/add', {'eng_name': addedItem}),
                                   ApiService.fetchItemIds(),
                                   SettingsService.getSettings()
                                 ]);

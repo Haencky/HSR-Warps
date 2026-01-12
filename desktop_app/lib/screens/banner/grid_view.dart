@@ -30,8 +30,8 @@ class _BannerGridViewState extends State<BannerGridView> {
   Future<void> _loadData() async {
     try {
       List<dynamic> response = await Future.wait([
-        ApiService.fetchApi('banners'),
-        ApiService.fetchApi('item_types'),
+        ApiService.fetchApi('api/banners'),
+        ApiService.fetchApi('api/item_types'),
         SettingsService.getSettings()
       ]);
       if (response[0].statusCode == 200 && response[1].statusCode == 200) {
