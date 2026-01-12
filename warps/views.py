@@ -231,11 +231,13 @@ def add_items_manual_api(request:HttpRequest):
     name:str = request.data.get('eng_name')
     suggestions = []
     msg = ""
+    item_id = None
     try:
         ids = requests.get(url=ITEM_ID_URL).json()
     except:
         messages.error(request, 'Error loading Item IDs Json File')
     try:
+        print(ids)
         wanted = ids[name]
         item_id = wanted
         img_url = f'{IMAGE_URL}{"character_" if item_id < 20_000 else "light_cone_"}portrait/{item_id}.png'
