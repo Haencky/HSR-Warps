@@ -12,6 +12,7 @@ from collections import Counter
 import time
 
 from .models import *
+from .serializers import *
 from .models import Warp as W
 
 """
@@ -311,7 +312,7 @@ def fetch_info(url:str, gacha_type: int) -> dict:
             time.sleep(0.1)
         return counter
     fetched = _fetch(url)
-    return {'gacha_type': gacha_type, 'new_warps': fetched}
+    return fetched
 
 def check_banner():
     """
@@ -328,8 +329,8 @@ class WarpAnalyser():
     """
     Analyse all warps
     """
-        
-    def warps_per_type(self) -> dict:
+    @staticmethod  
+    def warps_per_type(is_api: bool) -> dict:
         """
         Returns amount of warps for all gacha_types
 
@@ -359,7 +360,10 @@ class WarpAnalyser():
                 winrate = None
                 last_win = filtered.filter(item_id__item_id__in=LOST).latest('item_id')
 
-            types[f'{g_id.name}'] = {'pity': pity, 'warranted': warranted, 'wr': winrate, 'c': amount, 'last_win': last_win, 'max_pity': max_pity, 'jade': jade, 'euro': euro, 'id': g_id}
+            if is_api:
+                types[f'{g_id.name}'] = {'pity': pity, 'warranted': warranted, 'wr': winrate, 'c': amount, 'last_win': WarpSerializer(last_win).data if last_win else None, 'max_pity': max_pity, 'jade': jade, 'euro': euro, 'id': g_id.id}
+            else:
+                types[f'{g_id.name}'] = {'pity': pity, 'warranted': warranted, 'wr': winrate, 'c': amount, 'last_win': last_win, 'max_pity': max_pity, 'jade': jade, 'euro': euro, 'id': g_id}
         return types
 
     def warps_per_banner(self) -> dict:

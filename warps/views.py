@@ -37,7 +37,7 @@ def get_suggestion(input:str, correct:list, max_distance=3, top_n=5):
 
 # Create your views here.
 def index(request):
-    types = Analyser.warps_per_type()
+    types = Analyser.warps_per_type(is_api=False)
     items = json.dumps(list(Item.objects.order_by('name').values('name', 'item_id', 'image', 'eng_name')))
 
     labels, data = [], []
@@ -188,8 +188,9 @@ def api_banner(request: HttpRequest, banner: int) -> JsonResponse:
         'title': 'Pulls per Rarity' 
     })
 
+@api_view(['GET'])
 def index_api(request):
-    types = Analyser.warps_per_type()
+    types = Analyser.warps_per_type(is_api=True)
     labels, data = [], []
     
     queryset = Warp.objects.select_related('item_id').values('item_id__rarity').annotate(count=Count('id')).order_by('item_id__rarity')
@@ -217,7 +218,8 @@ def add_pulls_api(request:HttpRequest):
             status=status.HTTP_400_BAD_REQUEST
         )
     
-    results = [{str(GachaType.objects.filter(gacha_type=t).values_list('name', flat=True)[0]): fetch_info(url, t)} for t in types if GachaType.objects.filter(gacha_type=t).exists()]
+    added = {t: fetch_info(url, t) for t in types}
+    results = [{str(GachaType.objects.filter(gacha_type=t).values_list('name', flat=True)[0]): added[t]} for t in types if added[t] > 0]
     check_banner()
     return Response({
         'message': 'Imported Warps',
