@@ -204,7 +204,7 @@ class _SearchItemState extends State<MainScaffold> {
                               onPressed: addedItem.isEmpty ? null : () async {
                                 setStateInside(() => isLoading = true);
                                 final List<dynamic> response = await Future.wait([
-                                  ApiService.sendToApi('api/add', {'eng_name': addedItem}),
+                                  ApiService.sendToApi('api/add_item', {'eng_name': addedItem}),
                                   ApiService.fetchItemIds(),
                                   SettingsService.getSettings()
                                 ]);
