@@ -166,7 +166,7 @@ class _SearchItemState extends State<MainScaffold> {
                               child: ListView.separated(
                                 shrinkWrap: true,
                                 itemBuilder: (context, i) => ListTile(
-                                  title: Text(suggestions[i]),
+                                  title: Text(suggestions[i][0]),
                                   leading: Text('${i+1}'),
                                 ),
                                 separatorBuilder: (context, i) => const Divider(),

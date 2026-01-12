@@ -32,7 +32,7 @@ def get_suggestion(input:str, correct:list, max_distance=3, top_n=5):
         d = distance(input.lower(), n.lower())
         if d <= max_distance:
             distances[n] = d
-    return sorted(distances.keys())[:top_n]
+    return sorted(distances.items(), key=operator.itemgetter(1))[:top_n]
 
 # Create your views here
 @api_view(['GET'])
