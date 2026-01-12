@@ -72,7 +72,7 @@ class _Item():
     def __eq__(self, value):
         return self.id == value.id
 
-def fetch_info(url:str, gacha_type: int) -> dict:
+def fetch_info(url:str, gacha_type: int) -> int:
     """
     Fetches info from HSR Api
 

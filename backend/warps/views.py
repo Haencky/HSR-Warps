@@ -65,7 +65,8 @@ def add_pulls_api(request:HttpRequest):
             status=status.HTTP_400_BAD_REQUEST
         )
     
-    results = [{str(GachaType.objects.filter(gacha_type=t).values_list('name', flat=True)[0]): fetch_info(url, t)} for t in types if GachaType.objects.filter(gacha_type=t).exists()]
+    added = {t: fetch_info(url, t) for t in types}
+    results = [{str(GachaType.objects.filter(gacha_type=t).values_list('name', flat=True)[0]): added[t]} for t in types if added[t] > 0]
     check_banner()
     return Response({
         'message': 'Imported Warps',
