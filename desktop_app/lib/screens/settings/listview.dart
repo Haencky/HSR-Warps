@@ -5,14 +5,19 @@ class SettingsBody extends StatefulWidget {
   const SettingsBody({super.key});
 
   @override
-  _SettingsPageState createState() => _SettingsPageState();
+  SettingsPageState createState() => SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsBody> {
+class SettingsPageState extends State<SettingsBody> {
   final _urlController = TextEditingController();
   final _portController = TextEditingController();
-  String _selectedCurrency = '€ (EUR)';
-  final List<Map<String, String>> _currencies = [{'€': 'EUR'}, {'\$': 'USD'}, {'¥': 'JPY'}, {'£': 'GBP'}];
+  String _selectedCurrency = '€';
+  final Map<String,String> _currencies = {
+  '€': 'EUR',
+  '\$': 'USD',
+  '¥': 'JPY',
+  '£': 'GBP'
+  };
 
   @override
   void initState() {
@@ -25,7 +30,10 @@ class _SettingsPageState extends State<SettingsBody> {
     setState(() {
       _urlController.text = settings['url']!;
       _portController.text = settings['port']!;
-      _selectedCurrency = settings['currency']!;
+      String? savedCurrency = settings['currency'];
+      if (savedCurrency != null && _currencies.containsKey(savedCurrency)) {
+        _selectedCurrency = savedCurrency;
+      }
     });
   }
 
@@ -46,7 +54,7 @@ class _SettingsPageState extends State<SettingsBody> {
       const SizedBox(height: 20),
       DropdownButtonFormField(
         initialValue: _selectedCurrency,
-        items: _currencies.map((dynamic value) => DropdownMenuItem<String>(value: value.keys.first, child: Text('${value.keys.first} (${value.values.first})'))).toList(), 
+        items: _currencies.entries.map((dynamic value) => DropdownMenuItem<String>(value: value.key, child: Text('${value.key} (${value.value})'))).toList(), 
         onChanged: (val) => setState(() => _selectedCurrency = val!),
         decoration: const InputDecoration(labelText: 'Currency'),
       ),
