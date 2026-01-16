@@ -7,6 +7,12 @@ This [file](https://haencky.github.io/HSR-Warps/itemIDs.json) contains IDs to ea
 > docker pull haenck/hsr-warptracker
 > ```
 
+# Desktop App
+> [!TIP]
+> A Desktop App is released in Version 1.0.0.
+> Currently, all features are only available on Windows, but the application also runs on Android or other OS.
+> Source Code for this App is written in Dart & Flutter, published in branch "app"
+
 # FAQ
 ## Banner not showing
 Banner only show up if they are connected to an item
