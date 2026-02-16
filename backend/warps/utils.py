@@ -1,4 +1,3 @@
-<<<<<<< HEAD:warps/utils.py
 from django.db.models import Q, Max
 from datetime import datetime
 from time import sleep
