@@ -1,4 +1,9 @@
 # HSR-Warps
+> [!CAUTION]
+> Currently not working due to errors while merging!
+> I am working on a fix
+> The docker image is not working as well
+
 This [file](https://haencky.github.io/HSR-Warps/itemIDs.json) contains IDs to each item in Honkai Star Rail
 
 > [!TIP]
