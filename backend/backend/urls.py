@@ -16,7 +16,19 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from warptracker.views import *
+from django.conf.urls.static import static
+from django.conf import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-]
+    path('api/dashboard', index_api),
+    path('api/add', add_pulls_api),
+    path('api/banners', banners_api),
+    path('api/item_types', item_types_api),
+    path('api/details/<int:id>', detail_item_api),
+    path('api/add_item', add_items_manual_api),
+    path('api/gacha_types', list_gacha_types_api),
+    path('api/item_warps', warps_per_item_api),
+    path('api/items', items_api),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

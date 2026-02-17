@@ -220,3 +220,5 @@ media
 warps/migrations/__pycache__/
 **/__pycache__/
 **/*-py[co]
+.vscode
+*.sql
