@@ -1,0 +1,84 @@
+.types-container {
+    display: flex;
+    gap: 10px;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 20px;
+    min-height: calc(100vh - 100px - 100px);
+}
+
+.type-container {
+    border-radius: 15px;
+    display: grid;
+    box-shadow: 0 4px 16px rgba(255,255,255,0.35);
+    transition: box-shadow 0.2s;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    grid-template-areas: 
+    "type-image type-header"
+    "type-image type-pity"
+    "type-image type-wr"
+    "type-image type-money";
+    grid-template-columns: 1fr 3fr;
+    column-gap: 5px;
+    padding: 5px;
+    background-color: black;
+    justify-items: start;
+    justify-content: center;
+    max-width: 500px;
+    min-width: 500px;
+}
+
+.type-image {
+    grid-area: type-image;
+    justify-self: start;
+    align-self: flex-start;
+    overflow: hidden;
+    width: 100%;
+
+}
+
+.type-image img {
+    display: block;
+    /*width: 100%;*/
+    height: auto;
+    border-radius: 10px;
+    max-height: 100px;
+    margin: 5px;
+}
+
+.type-header {
+    grid-area: type-header;
+    justify-content: flex-start;
+    color: whitesmoke;
+}
+
+.type-pity {
+    grid-area: type-pity;
+    justify-content: flex-start;
+    color: goldenrod;
+}
+
+.highlight-yes {
+    color: goldenrod;
+}
+
+.highlight-no {
+    color: red;
+}
+
+.type-warranted {
+    justify-content: flex-start;
+}
+
+.type-wr {
+    grid-area: type-wr;
+    justify-content: flex-start;
+    color: whitesmoke;
+}
+
+.type-money {
+    grid-area: type-money;
+    justify-content: flex-start;
+    color: whitesmoke;
+}

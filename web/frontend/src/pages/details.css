@@ -1,0 +1,59 @@
+.info {
+    width: 100%;
+    margin: auto;
+    padding: 20px;
+}
+
+.detail-content {
+    width: 1000px;
+    gap: 20px;
+    height: 1000px;
+    margin-top: 20px;
+    margin-left: 20px;
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.info-overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 700px;
+}
+
+.path img{
+    width: 60px;             
+    height: auto;
+}
+
+.count-detail {
+    font-size: 4rem;
+    font-weight: bold;
+    color: white;
+}
+
+.hr3 {
+    color: lightblue;
+}
+
+.hr4 {
+    color: darkviolet; 
+}
+
+.hr5 {
+    color: goldenrod;
+}
+
+.item-content-details {
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    width: 100%;
+    text-align: center;
+    margin-top: 100px;
+}

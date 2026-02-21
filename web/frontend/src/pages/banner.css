@@ -1,0 +1,114 @@
+.content {
+    gap: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    overflow-y: scroll;
+}
+
+.banner {
+    margin-bottom: 20px;
+    position: relative;
+    margin-left: 20px;
+}
+
+.banner img {
+    width: 120px;
+    height: 160px;
+    border-radius: 20px;
+    object-fit: cover;
+    display: block;
+    transition: transform .2s ease;
+}
+
+.stats {
+    transition: .5s ease;
+    opacity: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.banner:hover .banner-image {
+    opacity: 0.3;
+}
+
+.banner:hover .stats {
+    opacity: 1;
+}
+
+.text {
+    opacity: 1;
+    color: white;
+    font-size: 15px;
+    padding: 1px 2px;
+}
+
+.obtained {
+    border: 5px solid green;
+}
+
+.failed {
+    border: 5px solid red;
+}
+
+.ff_lost {
+    background-color:red;
+    color: white;
+    border-radius: 10px;
+
+}
+
+.ff_win {
+    background-color:green;
+    color: white;
+    border-radius: 10px;
+}
+
+.filter {
+    display: flex;
+    gap: 10px;
+    flex-direction: row;
+    margin: 20px;
+    justify-content: center;
+}
+
+.banner-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.banner-header {
+    width: 40px;
+    height: 40px;
+}
+
+.banner-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.type-banner-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: flex-start;
+}
+
+.type-divider {
+    border: 0;
+    height: 1px;
+    background: #444;
+    margin: 10px 0 20px 0;
+    width: 100%;
+}
+
+.all-content {
+    min-height: 100vh -100;
+    margin-top: 80px;
+    padding: 20px;
+}

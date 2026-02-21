@@ -1,0 +1,10 @@
+Dockerfile
+.git
+.env
+__pycache__/
+*.pyc
+venv/
+.venv/
+.vscode/
+media/
+db.sqlite3
