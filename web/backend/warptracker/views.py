@@ -58,10 +58,10 @@ def add_items_manual_api(request):
     item_id = 0
     msg = ""
     try:
-        ids = request.get(ITEM_ID_URL).json()
+        ids = requests.get(ITEM_ID_URL).json()
         wanted = ids[name]
         item_id = wanted
-        img_url = f'{IMAGE_URL}{"character_" if item_id < 20_000 else "light_cone_"}portrait/{item_id}.png'
+        img_url = f'{IMAGE_URL}image/{"character_" if item_id < 20_000 else "light_cone_"}portrait/{item_id}.png'
         img_name = f'{name}.png'
         fetch_img = requests.get(img_url) # fetch image
         image_bytes = BytesIO(fetch_img.content) # save to byte stream
