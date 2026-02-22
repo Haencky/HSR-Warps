@@ -80,7 +80,7 @@ class Warp():
         self.en_type = en_type
         self.en_name = en_name
         self.gacha_type = gacha_type
-        self.lang = lang.split("-")[0]
+        self.lang = lang
 
 
     def __str__(self):
@@ -169,6 +169,10 @@ def fetch_info(url:str, gacha_type: int) -> dict:
         # get gacha type or create
         gacha_type = warp.gacha_type
         if not GachaType.objects.filter(gacha_type=gacha_type).exists():
+            try:
+                name = GACHA_TYPES[warp.lang][gacha_type]
+            except KeyError:
+                name = GACHA_TYPES['en'][gacha_type]
             GachaType.objects.create(
                 gacha_type=gacha_type,
                 name=GACHA_TYPES[warp.lang][gacha_type]
@@ -253,10 +257,10 @@ def fetch_info(url:str, gacha_type: int) -> dict:
                 path_image_file = ImageFile(path_bytes, name=f'{path}.png')
 
                 Path.objects.create(
-                    name=path,
+                    name=display_path,
                     icon=path_image_file
                 )
-            path_id = Path.objects.filter(name=path).first()
+            path_id = Path.objects.filter(name=display_path).first()
 
 
             return {'image': django_file, 'path': path_id}
