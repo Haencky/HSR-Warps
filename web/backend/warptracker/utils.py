@@ -313,25 +313,6 @@ def fetch_info(url:str, gacha_type: int) -> dict:
     
     en_items = _fetch_en(url)
 
-    def _fetch_uid(url:str):
-        for t in GACHA_TYPES['en'].keys():
-            parsed = urlparse(url)
-            query_dict = parse_qs(parsed.query)
-            query_dict['gacha_type'] = [t] # set language to english
-            query_dict['size'] = [1]
-            new_query = urlencode(query_dict, doseq=True)
-            url = urlunparse(parsed._replace(query=new_query))
-
-            r = requests.get(url)
-            if r.status_code == 200:
-                id = r.json()
-                try:
-                    id = id['data']['list'][0]['uid']
-                except:
-                    pass
-            time.sleep(0.1)
-            return id    
-
     def _fetch(url):
         """
         Fetches all infos from given gacha_type
@@ -339,41 +320,43 @@ def fetch_info(url:str, gacha_type: int) -> dict:
         Params:
             urL(str): url to HSR Api
         """
-        last = 0
-        l = W.objects.filter(uid=_fetch_uid(url), gacha_id__gacha_type__gacha_type=gacha_type).aggregate(last=Max('warp_id'))
-        last_ = l.get('last')
-        last = last_ if last_ is not None else 0
-
         counter = 0
 
         warps = requests.get(url).json()['data']['list'] # request all warps
-        for warp in warps:
-            if int(warp['id']) < last: # break loop if nothing new is added
-                return 0
-            item_id = int(warp['item_id'])
-            w = Warp(
-                item_id=warp['item_id'],
-                name=warp['name'],
-                rarity=warp['rank_type'],
-                uid=warp['uid'],
-                gacha_id=warp['gacha_id'],
-                item_type=warp['item_type'],
-                en_type=en_items[item_id]['type'],
-                en_name=en_items[item_id]['name'],
-                time=warp['time'],
-                id=warp['id'],
-                gacha_type=gacha_type,
-                lang=warp['lang']
-            )
+        if warps:
+            last = 0
+            l = W.objects.filter(uid=warps[0]['uid'], gacha_id__gacha_type__gacha_type=gacha_type).aggregate(last=Max('warp_id'))
+            last_ = l.get('last')
+            last = last_ if last_ is not None else 0
+            for warp in warps:
+                if int(warp['id']) <= last: # break loop if nothing new is added
+                    return 0
+                item_id = int(warp['item_id'])
+                w = Warp(
+                    item_id=warp['item_id'],
+                    name=warp['name'],
+                    rarity=warp['rank_type'],
+                    uid=warp['uid'],
+                    gacha_id=warp['gacha_id'],
+                    item_type=warp['item_type'],
+                    en_type=en_items[item_id]['type'],
+                    en_name=en_items[item_id]['name'],
+                    time=warp['time'],
+                    id=warp['id'],
+                    gacha_type=gacha_type,
+                    lang=warp['lang']
+                )
 
-            if not _check_item(item_id):
-                create_item(w)
-            
-            if int(w.id) > last:
-                counter += 1
-                _add_warp(w)
-            time.sleep(0.1)
-        return counter
+                if not _check_item(item_id):
+                    create_item(w)
+                
+                if int(w.id) > last:
+                    counter += 1
+                    _add_warp(w)
+                time.sleep(0.1)
+            return counter
+        else:
+            return 0
     fetched = _fetch(url)
     return fetched
 
