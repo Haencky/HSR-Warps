@@ -49,17 +49,20 @@ function Navbar() {
                             setShowDropdown(true)
                         }}
                         onFocus={() => setShowDropdown(true)}
-                        onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+                        onBlur={() => setTimeout(() => setShowDropdown(false), 300)}
                     />
                     {showDropdown && query.length > 0 && filteredItems.length > 0 && (
                         <div className="autocomplete-dropdown">
                             {filteredItems.map(item => 
-                                <div>
+                                <div key={item.item_id}>
                                     <Link 
                                         key={item.item_id}
                                         to={`/details/${item.item_id}`}
                                         className="autocomplete-item"
-                                        onClick={() => setQuery("")}
+                                        onClick={() => {
+                                            setQuery("")
+                                            setShowDropdown(false)
+                                        }}
                                     >
                                         {item.name}
                                     </Link>
