@@ -19,7 +19,7 @@ function Home() {
   }
 
   const [types, setTypes] = useState<DashboardType[]>([])
-  const VITE_API_URL = import.meta.env.VITE_API_URL
+  const VITE_API_URL = window._env_.BACKEND_URL
 
   useEffect(() => {
     fetchTypes()

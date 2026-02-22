@@ -38,7 +38,7 @@ function Items() {
     const [allPaths, setAllPaths] = useState<Path[]>([])
     const [paths, setPaths] = useState<number[]>([])
     const [showPathDD, setShowPathDD] = useState(false)
-    const VITE_API_URL = import.meta.env.VITE_API_URL
+    const VITE_API_URL = window._env_.BACKEND_URL
 
     useEffect(() => {
         fetch(`${VITE_API_URL}/api/items`)

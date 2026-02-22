@@ -25,7 +25,7 @@ function Banner() {
     const [allTypes, setAllTypes] = useState<Typ[]>([])
     const [types, setTypes] = useState<number[]>([])
     const [order, setOrder] = useState<string>('time-no')
-    const VITE_API_URL = import.meta.env.VITE_API_URL
+    const VITE_API_URL = window._env_.BACKEND_URL
 
     useEffect(() => {
         fetch(`${VITE_API_URL}/api/gacha_types`)

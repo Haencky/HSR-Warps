@@ -15,7 +15,7 @@ function Add () {
 
     const [inputUrl, setInputUrl] = useState('')
     const [isLoading, setIsLoading] = useState(false)
-    const VITE_API_URL = import.meta.env.VITE_API_URL
+    const VITE_API_URL = window._env_.BACKEND_URL
 
 
     const copyToClipboard = () => {

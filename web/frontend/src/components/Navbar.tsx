@@ -23,7 +23,7 @@ function Navbar() {
     const [query, setQuery] = useState('')
     const [items, setItems] = useState<ItemInterface[]>([])
     const [showDropdown, setShowDropdown] = useState(false)
-    const VITE_API_URL = import.meta.env.VITE_API_URL
+    const VITE_API_URL = window._env_.BACKEND_URL
 
     useEffect(() => {
         fetch(`${VITE_API_URL}/api/items`)

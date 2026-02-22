@@ -1,6 +1,7 @@
 services:
   backend:
     image: haenck/hsr-warptracker-backend:latest # dont change
+    container_name: hsr-backend
     volumes:
       - ${DB_PATH}:/app/db.sqlite3 # change the path to actual db
       - ${MEDIA_PATH}:/app/media # change path to acutal media folder
@@ -12,5 +13,8 @@ services:
   
   frontend:
     image: haenck/hsr-warptracker-frontend:latest # dont change
+    container_name: hsr-frontend
+    environment:
+      - VITE_API_URL=${VITE_API_URL}
     ports:
       - "5173:80" # dont change

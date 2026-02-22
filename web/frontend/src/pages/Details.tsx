@@ -18,7 +18,7 @@ function Details () {
 
     const [item, setItem] = useState<Item>()
     const { id } = useParams()
-    const VITE_API_URL = import.meta.env.VITE_API_URL
+    const VITE_API_URL = window._env_.BACKEND_URL
 
     const c = {
         3: 'lightblue',
