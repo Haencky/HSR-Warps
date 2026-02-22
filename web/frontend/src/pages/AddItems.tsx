@@ -24,7 +24,7 @@ function AddItems() {
         setIsLoading(true)
 
         try {
-            const r = await fetch(`${VITE_API_URL}api/add_item`, {
+            const r = await fetch(`${VITE_API_URL}/api/add_item`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

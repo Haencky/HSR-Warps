@@ -24,7 +24,6 @@ function Navbar() {
     const [items, setItems] = useState<ItemInterface[]>([])
     const [showDropdown, setShowDropdown] = useState(false)
     const VITE_API_URL = import.meta.env.VITE_API_URL
-    console.log(VITE_API_URL)
 
     useEffect(() => {
         fetch(`${VITE_API_URL}/api/items`)
@@ -68,6 +67,19 @@ function Navbar() {
                                     </Link>
                                 </div>
                             )}
+                        </div>
+                    )}
+                    {showDropdown && filteredItems.length === 0 && (
+                        <div className="autocomplete-dropdown">
+                            <div key='missing' className="autocomplete-item">
+                                <Link to={'/add/item'} style={{
+                                    color: "inherit",
+                                    textDecoration:"none"
+                                }}>
+                                    Item not showing? Try reloading! <br/>
+                                    Or add an item by clicking!
+                                </Link>
+                            </div>
                         </div>
                     )}
                 </div>

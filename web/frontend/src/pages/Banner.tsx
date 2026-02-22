@@ -24,7 +24,7 @@ function Banner() {
     const [banner, setBanner] = useState<BannerInterface[]>([])
     const [allTypes, setAllTypes] = useState<Typ[]>([])
     const [types, setTypes] = useState<number[]>([])
-    const [order, setOrder] = useState<string>('count-hl')
+    const [order, setOrder] = useState<string>('time-no')
     const VITE_API_URL = import.meta.env.VITE_API_URL
 
     useEffect(() => {
