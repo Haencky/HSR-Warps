@@ -69,7 +69,7 @@ function Navbar() {
                             )}
                         </div>
                     )}
-                    {showDropdown && filteredItems.length === 0 && (
+                    {showDropdown && query.length > 0 && filteredItems.length === 0 && (
                         <div className="autocomplete-dropdown">
                             <div key='missing' className="autocomplete-item">
                                 <Link to={'/add/item'} style={{

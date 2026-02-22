@@ -2,13 +2,13 @@ services:
   backend:
     image: haenck/hsr-warptracker-backend:latest # dont change
     volumes:
-      - ./db.sqlite3:/app/db.sqlite3 # change the path to actual db
-      - ./media:/app/media # change path to acutal media folder
+      - ${DB_PATH}:/app/db.sqlite3 # change the path to actual db
+      - ${MEDIA_PATH}:/app/media # change path to acutal media folder
     ports:
       - "8000:8000" # dont change
     environment:
-      - ALLOWED_HOSTS=localhost,127.0.0.1 # * for allow all
-      - CORS_ALLOWED_ORIGINS=http://localhost:5173 # url and port react is running
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS} # * for allow all
+      - CORS_ALLOWED_ORIGINS={CORS_ALLOWED_ORIGINS} # url and port react is running
   
   frontend:
     image: haenck/hsr-warptracker-frontend:latest # dont change
