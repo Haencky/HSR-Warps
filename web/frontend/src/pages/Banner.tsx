@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { Link } from "react-router-dom";
 
 import './banner.css'
 function Banner() {
@@ -90,18 +91,29 @@ function Banner() {
                                 </div>
                                 <hr className="type-divider" />
                                 <div className="type-banner-grid">
-                                    {filteredBanner.filter((x) => x.gacha_type === t.gacha_type).map((b) => 
-                                        <div key={b.gacha_id} className="banner">
-                                            <img
-                                                src={`${VITE_API_URL}${b.item_image}`}
-                                                alt={b.hsr_gacha_id.toString()} 
-                                                className={b.obtained > 4? 'obtained banner-image': 'failed banner-image'}
-                                            />
-                                            <div className="stats">
-                                                <span className={`${b.ff ? 'ff_lost': 'ff_win'} `}>{b.count}</span>
+                                    {filteredBanner.filter((x) => x.gacha_type === t.gacha_type).map((b) => {
+                                        const banner_content = (
+                                            <div key={b.gacha_id} className="banner">
+                                                <img
+                                                    src={`${VITE_API_URL}${b.item_image}`}
+                                                    alt={b.hsr_gacha_id.toString()} 
+                                                    className={b.obtained > 4? 'obtained banner-image': 'failed banner-image'}
+                                                />
+                                                <div className="stats">
+                                                    <span className={`${b.ff ? 'ff_lost': 'ff_win'} `}>{b.count}</span>
+                                                </div>
                                             </div>
-                                        </div>
-                                    )}
+                                        )
+                                        return b.obtained < 5 ? (
+                                            <Link to={`${VITE_API_URL}/admin/warptracker/banner/${b.gacha_id}/change/`} style={{
+                                                textDecoration: 'none', 
+                                                color: "inherit",
+                                                display: "contents"
+                                            }}>
+                                                {banner_content}
+                                            </Link>
+                                        ) : banner_content
+                                    })}
                                 </div>
                             </div>
                         )

@@ -9,7 +9,7 @@ function Footer() {
                     <a href='https://github.com/Haencky/HSR-Warps' target="_blank" rel="noopener norefferer">
                         <i className="fab fa-github">Github</i>
                     </a>
-                    <a href='https://hub.docker.com/repositories/haenck/hsr-warptracker' target="_blank" rel='noopener norefferer'>
+                    <a href='https://hub.docker.com/repositories/haenck' target="_blank" rel='noopener norefferer'>
                         <i className="fab fa-docker">Docker Hub</i>
                     </a>
                     <a href='https://haencky.github.io/HSR-Warps/itemIDs.json' target='_blank' rel='noopener norefferer'>
