@@ -13,17 +13,15 @@ Django and React based Gacha-Tracker for Honkai Starrail
 > Please note that the desktop app is currently not working to to chaanges on the backend
 
 ## Getting started
-1. In `web` is a file called `.env.example`
-2. Create a media *folder* and a db.sqlite3 *file* where you want
-3. Change the **values** (behind `=`) for your purposes (e.g. new path or url)
-4. Rename the file `.env.example` $\rightarrow$ `.env`
-5. Run `docker compose up -d` inside of `web`
-6. Run `docker exec -it {backend-container} sh` to enter the container
+1. Create a media *folder* and a db.sqlite3 *file* where you want
+2. Change the **values** (behind `=`) for your purposes (e.g. new path or url) in `docker-compose.yml`
+3. Run `docker compose up -d`
+4. Run `docker exec -it {backend-container} sh` to enter the container
   1. Run `python manage.py makemigrations`
   2. Run `python manage.py migrate` to migrate the db file
   3. Run `python manage.py createsuperuser` and follow instructions
   4. Hit `CTRL + d` to exit the container
-7. Your containers should be running!
+5. Your containers should be running!
 
 ## Coordination
 - `Jade-Image`: Home screen displaying current pity and more
