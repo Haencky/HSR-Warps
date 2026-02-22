@@ -2,23 +2,8 @@
 Django and React based Gacha-Tracker for Honkai Starrail
 
 ## Get your containers up and running!
-```yaml
-services:
-  backend:
-    image: haenck/hsr-warptracker-backend:latest # dont change
-    volumes:
-      - ./db.sqlite3:/app/db.sqlite3 # change the path to actual db
-      - ./media:/app/media # change path to acutal media folder
-    ports:
-      - "8000:8000" # dont change
-    environment:
-      - ALLOWED_HOSTS=localhost,127.0.0.1 # * for allow all
-      - CORS_ALLOWED_ORIGINS=http://localhost:5173 # url and port react is running
-  
-  frontend:
-    image: haenck/hsr-warptracker-frontend:latest # dont change
-    ports:
-      - "5173:80" # dont change
+``` bash
+curl -sSL https://raw.githubusercontent.com/Haencky/HSR-Warps/refs/heads/main/install.sh -o install.sh && chmod +x install.sh && ./install.sh
 ```
 
 > [!CAUTION]
