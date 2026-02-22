@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { Link } from "react-router-dom";
 import './items.css'
 
 function Items() {
@@ -161,15 +162,17 @@ function Items() {
                             <hr className="path-divider" />
                             <div className="path-items-grid">
                                 {filteredItems.filter((x) => x.path === p.id).map((i) => 
-                                <div key={i.item_id} className={`item r${i.rarity}`} onClick={() => window.open(i.wiki, '_blank', 'noopener, norefferer')}>
-                                    <img 
-                                        src={`${VITE_API_URL}${i.image}`}
-                                        alt={i.name}
-                                    />
-                                    <div className={`count ${i.obtained ? 'obtained' : 'notobtained'}`}>
-                                        {i.obtained}
+                                <Link to={`/details/${i.item_id}`}>
+                                    <div key={i.item_id} className={`item r${i.rarity}`}>
+                                        <img 
+                                            src={`${VITE_API_URL}${i.image}`}
+                                            alt={i.name}
+                                        />
+                                        <div className={`count ${i.obtained ? 'obtained' : 'notobtained'}`}>
+                                            {i.obtained}
+                                        </div>
                                     </div>
-                                </div>
+                                </Link>
                                 )}
                             </div>
                         </div>
