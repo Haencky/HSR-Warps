@@ -47,7 +47,7 @@ FINAL_API_URL="http://$API_URL_IP:8000"
 
 echo -e "Die API wurde konfiguriert auf: \033[0;34m$FINAL_API_URL\033[0m"
 
-read -p "Allowed Hosts [localhost,127.0.0.1,$FINAL_API_URL]: " ALLOWED_HOSTS
+read -p "Allowed Hosts [localhost,127.0.0.1,$API_URL_IP]: " ALLOWED_HOSTS
 ALLOWED_HOSTS=${ALLOWED_HOSTS:-127.0.0.1,localhost,$API_URL_IP}
 
 echo -e "${YELLOW}Create .env ...${NC}"

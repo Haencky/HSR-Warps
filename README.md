@@ -14,16 +14,24 @@ curl -sSL https://raw.githubusercontent.com/Haencky/HSR-Warps/refs/heads/main/in
 > This repository will get some fixes and upgrades in the future <br>
 > Please note that the desktop app is currently not working to to chaanges on the backend
 
-## Getting started
-1. Create a media *folder* and a db.sqlite3 *file* where you want
-2. Change the **values** (behind `=`) for your purposes (e.g. new path or url) in `docker-compose.yml`
-3. Run `docker compose up -d`
-4. Run `docker exec -it {backend-container} sh` to enter the container
-  1. Run `python manage.py makemigrations`
-  2. Run `python manage.py migrate` to migrate the db file
-  3. Run `python manage.py createsuperuser` and follow instructions
-  4. Hit `CTRL + d` to exit the container
-5. Your containers should be running!
+## Migration
+> [!ERROR]
+> I kind of screwed up by renaiming the django app from `warps` $\rightarrow$ `warptracker`, sorry!<br>
+> if you are new it has no effect on you. <br>
+> Migrating your old database is possible by connecting to your database (e.g. via DB Browser for SQLite) and running the commands below to rename the old tables.<br>
+> Make sure to wirte the changes to your database!!!
+
+```sql
+ALTER TABLE warps_banner RENAME TO warptracker_banner;
+ALTER TABLE warps_gachatype RENAME TO warptracker_gachatype;
+ALTER TABLE warps_itemtype RENAME TO warptracker_itemtype;
+ALTER TABLE warps_item RENAME TO warptracker_item;
+ALTER TABLE warps_path RENAME TO warptracker_path;
+ALTER TABLE warps_warp RENAME TO warptracker_warp;
+
+UPDATE django_content_type SET app_label = 'warptracker' WHERE app_label = 'warps';
+UPDATE django_migrations SET app = 'warptracker' WHERE app = 'warps';
+```
 
 ## Coordination
 - `Jade-Image`: Home screen displaying current pity and more
