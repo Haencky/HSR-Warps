@@ -19,7 +19,7 @@ curl -sSL https://raw.githubusercontent.com/Haencky/HSR-Warps/refs/heads/main/in
 > I kind of screwed up by renaiming the django app from `warps` $\rightarrow$ `warptracker`, sorry!<br>
 > if you are new it has no effect on you. <br>
 > Migrating your old database is possible by connecting to your database (e.g. via DB Browser for SQLite) and running the commands below to rename the old tables.<br>
-> Make sure to wirte the changes to your database!!!
+> Make sure to wirte the changes to your database &  restart the container if running!!!
 
 ```sql
 ALTER TABLE warps_banner RENAME TO warptracker_banner;

@@ -74,7 +74,7 @@ sleep 5
 echo -e "${GREEN}Running migrations...${NC}"
 docker compose exec backend python manage.py migrate
 
-echo -e "${YELLOW}Prüfe vorhandene Admin-Accounts...${NC}"
+echo -e "${YELLOW}Check for existing admin accounts...${NC}"
 
 EXISTING_ADMINS=$(docker compose exec -T backend python manage.py shell <<EOF
 from django.contrib.auth import get_user_model
