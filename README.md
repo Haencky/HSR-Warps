@@ -1,12 +1,22 @@
 # HSR Warptracker
 Django and React based Gacha-Tracker for Honkai Starrail
 
+|**Service**|**Port**|**Most likely URL**|
+|---|---|---|
+|Frontend| 5173|http://localhost:5173|
+|Backend (API)|8000|http://localhost:8000|
+
 ## Get your containers up and running!
-``` bash
+> [!TIP]
+> If you just want to run this on your PC and some technical terms confuse you just hit enter (default values in [] are set). This works just fine. <br>
+> Only make sure to set your path to media and db file correct (per default the files will be created/selected in your current directory) <br>
+> 
+
+```bash
 curl -sSL https://raw.githubusercontent.com/Haencky/HSR-Warps/refs/heads/main/install.sh -o install.sh && chmod +x install.sh && ./install.sh
 ```
-
-> [!CAUTION]
+## Info
+> [!WARNING]
 > Items will be added after a delay of about 3-5 days after their release. <br>
 > Adding items manually will fail unless the item is added in Item IDs.json in this repository
 
