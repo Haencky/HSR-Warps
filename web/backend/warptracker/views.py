@@ -1,3 +1,5 @@
+# Copyright (C) 2026 Max Mustermann
+# SPDX-License-Identifier: GPL-3.0-or-later
 from rest_framework.decorators import api_view
 from django.db.models import F, Max, Q, Count
 from rest_framework.response import Response
@@ -8,7 +10,7 @@ from io import BytesIO
 from django.core.files.images import ImageFile
 import requests
 from django.contrib import messages
-from .utils import WarpAnalyser, fetch_info, check_banner, getLCPath
+from .utils import WarpAnalyser, fetch_info, check_banner, getLCs
 from .serializers import *
 import operator
 import json
@@ -42,7 +44,8 @@ def add_pulls_api(request):
             status=status.HTTP_400_BAD_REQUEST
         )
     
-    added = {t: fetch_info(url, t) for t in types}
+    lcs = getLCs()
+    added = {t: fetch_info(url, t, lcs) for t in types}
     print(added)
     results = [{'name': str(GachaType.objects.filter(gacha_type=t).values_list('name', flat=True)[0]), 'count': added[t]} for t in types if added[t] > 0]
     check_banner()

@@ -1,3 +1,5 @@
+# Copyright (C) 2026 Haencky
+# SPDX-License-Identifier: GPL-3.0-or-later
 from .models import Path, Item, ItemType, GachaType, Banner
 from .const import LOST, SIZE, WIKI_URL, IMAGE_URL, DOUBLES, GACHA_TYPES, PRYDWEN_CHAR, PRYDWEN_LC, PLURALS ,SPECIALS
 from .serializers import *
@@ -102,17 +104,10 @@ class _Item():
     def __eq__(self, value):
         return self.id == value.id
 
-def getLCPath(name: str):
+def getLCs ():
     """
-    Returns the path of a Light Cone
-
-    Params:
-        name(str): name of light cone
-    
-    Returns:
-        path(str): name of Path
+    Fetches all light cones and returns their dictionary
     """
-
     try:
         r = requests.get(PRYDWEN_LC)
     except requests.RequestException:
@@ -120,28 +115,41 @@ def getLCPath(name: str):
         return None
     if r.status_code == 200:
         data = r.json()['result']['data']['allCharacters']['nodes']
-        for lc in data:
-            if name in PLURALS:
-                if lc['name'].lower() == f'{name}s'.lower():
-                    path = lc['path']
-                    return path
-            else: 
-                if lc['name'].lower() == name.lower():
-                    path = lc['path']
-                    return path
-
+        return data
     else:
-        print('Invalid status code')
-    return None
+        print("Invalid status code")
+        return None
 
-def fetch_info(url:str, gacha_type: int) -> dict:
+def getLCPath(name: str, data:dict):
+    """
+    Returns the path of a Light Cone
+
+    Params:
+        name(str): name of light cone
+        data(dict): dictionary of all light cones
+    
+    Returns:
+        path(str): name of Path
+    """
+    
+    for lc in data:
+        if name in PLURALS:
+            if lc['name'].lower() == f'{name}s'.lower():
+                path = lc['path']
+                return path
+        else: 
+            if lc['name'].lower() == name.lower():
+                path = lc['path']
+                return path
+
+def fetch_info(url:str, gacha_type: int, lc_data: dict) -> dict:
     """
     Fetches info from HSR Api
 
     Params: 
         url(str): base url including authkey
         gacha_type(int): gacha type (e.g. 11 for event character)
-        last_id(int): last id pulled
+        lcdata(dict): dictionary for all light cones
     """
     parsed = urlparse(url)
     query_dict = parse_qs(parsed.query)
@@ -175,7 +183,7 @@ def fetch_info(url:str, gacha_type: int) -> dict:
                 name = GACHA_TYPES['en'][gacha_type]
             GachaType.objects.create(
                 gacha_type=gacha_type,
-                name=GACHA_TYPES[warp.lang][gacha_type]
+                name=name
             )
         gacha_type = GachaType.objects.get(gacha_type=gacha_type)
 
@@ -222,7 +230,7 @@ def fetch_info(url:str, gacha_type: int) -> dict:
 
             if type == 'Light Cone':
                 #img_name = 'light_cones/'
-                path = getLCPath(name)
+                path = getLCPath(name, lc_data)
                 img_link = IMAGE_URL + 'image/light_cone_'
             else:
                 #img_name = 'characters/'
@@ -289,6 +297,7 @@ def fetch_info(url:str, gacha_type: int) -> dict:
             rarity = warp.rarity,
             eng_name = warp.en_name,
         )
+        print(f'Created item {warp.item_id} - {warp.name}')
 
     def _fetch_en(url) -> dict:
         """

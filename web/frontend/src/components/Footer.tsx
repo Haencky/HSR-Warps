@@ -4,7 +4,7 @@ function Footer() {
     return (
        <footer className="footer">
             <div className="footer-content">
-                <p>&copy; 2026 HSR-Warps</p>
+                <p>&copy; 2026 Haencky · Released under <a href="https://www.gnu.org/licenses/gpl-3.0.en.html" target="_blank" rel="noreferrer">GPLv3</a></p>
                 <div className="footer-links">
                     <a href='https://github.com/Haencky/HSR-Warps' target="_blank" rel="noopener norefferer">
                         <i className="fab fa-github">Github</i>

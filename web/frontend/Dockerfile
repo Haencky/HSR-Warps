@@ -18,3 +18,7 @@ RUN chmod +x /entrypoint.sh
 COPY --from=build /app/dist /usr/share/nginx/html
 
 ENTRYPOINT [ "/entrypoint.sh" ]
+
+LABEL org.opencontainers.image.licenses="GPL-3.0"
+LABEL org.opencontainers.image.authors="Haencky"
+LABEL org.opencontainers.image.source="https://github.com/Haencky/HSR-Warps"
