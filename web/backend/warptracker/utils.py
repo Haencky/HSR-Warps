@@ -8,7 +8,6 @@ from urllib.parse import urlparse, urlunparse, urlencode, parse_qs
 from django.utils.timezone import make_aware
 from django.core.files.images import ImageFile
 import requests
-from bs4 import BeautifulSoup
 from datetime import datetime
 from django.db.models import Max
 from io import BytesIO
