@@ -9,6 +9,7 @@ import AddItems from './pages/AddItems'
 import Items from './pages/Items'
 import Footer from './components/Footer'
 import Details from './pages/Details'
+import DetailBanner from './pages/DetailBanner'
 
 import './App.css'
 
@@ -25,6 +26,7 @@ function App() {
               <Route path='/add/item' element={<AddItems />} />
               <Route path='/items' element={<Items />} />
               <Route path='/details/:id' element={< Details />} />
+              <Route path='/banner/:id' element={< DetailBanner />} />
             </Routes>
           </main>
           <Footer />

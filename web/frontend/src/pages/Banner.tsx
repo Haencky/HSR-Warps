@@ -91,9 +91,12 @@ function Banner() {
                                 </div>
                                 <hr className="type-divider" />
                                 <div className="type-banner-grid">
-                                    {filteredBanner.filter((x) => x.gacha_type === t.gacha_type).map((b) => {
-                                        const banner_content = (
-                                            <div key={b.gacha_id} className="banner">
+                                    {filteredBanner.filter((x) => x.gacha_type === t.gacha_type).map((b) => (
+                                        <Link key={b.gacha_id} to={`/banner/${b.gacha_id}`} style={{
+                                            textDecoration: "none",
+                                            color: "inherit"
+                                        }}>
+                                            <div className="banner">
                                                 <img
                                                     src={`${VITE_API_URL}${b.item_image}`}
                                                     alt={b.hsr_gacha_id.toString()} 
@@ -103,17 +106,8 @@ function Banner() {
                                                     <span className={`${b.ff ? 'ff_lost': 'ff_win'} `}>{b.count}</span>
                                                 </div>
                                             </div>
-                                        )
-                                        return b.obtained < 5 ? (
-                                            <Link to={`${VITE_API_URL}/admin/warptracker/banner/${b.gacha_id}/change/`} style={{
-                                                textDecoration: 'none', 
-                                                color: "inherit",
-                                                display: "contents"
-                                            }}>
-                                                {banner_content}
-                                            </Link>
-                                        ) : banner_content
-                                    })}
+                                        </Link>
+                                    ))}
                                 </div>
                             </div>
                         )
