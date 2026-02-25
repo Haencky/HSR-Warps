@@ -162,7 +162,7 @@ function Items() {
                             <hr className="path-divider" />
                             <div className="path-items-grid">
                                 {filteredItems.filter((x) => x.path === p.id).map((i) => 
-                                <Link to={`/details/${i.item_id}`}>
+                                <Link to={`/details/${i.item_id}`} key={i.item_id}>
                                     <div key={i.item_id} className={`item r${i.rarity}`}>
                                         <img 
                                             src={`${VITE_API_URL}${i.image}`}
