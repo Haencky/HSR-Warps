@@ -195,9 +195,14 @@ function DetailBanner () {
                                             {w.item_name}                           
                                         </Link>
                                     </td>
-                                    <td className="time">
-                                        {w.time.replace('Z', '').replace('T', ' ')}
-                                    </td>
+                                    {w.time !== null 
+                                        ?  <td className="time">
+                                                {w.time.replace('Z', '').replace('T', ' ')}
+                                            </td>
+                                        : <td className="time">
+                                            -
+                                        </td>
+                                    }   
                                 </tr>
                             ))
                             }
