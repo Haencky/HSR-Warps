@@ -39,6 +39,7 @@ class BannerSerializer(serializers.ModelSerializer):
 class WarpSerializer(serializers.ModelSerializer):
     item_name = serializers.CharField(source='item_id.name', read_only=True)
     item_image = serializers.ImageField(source='item_id.image', read_only=True)
+    item_rarity = serializers.IntegerField(source='item_id.rarity')
     class Meta:
         model = Warp
         fields = '__all__'

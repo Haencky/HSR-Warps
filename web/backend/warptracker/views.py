@@ -111,3 +111,19 @@ def items_api(request):
 @api_view(['GET'])
 def path_api(request):
     return Response(PathSerializer(Path.objects.all(), many=True).data)
+
+@api_view(['GET'])
+def detail_banner_api(request, id:int):
+    b = BannerSerializer(Banner.objects.get(id=id)).data
+    b_data = Warp.objects.filter(gacha_id=id)
+    warps = WarpSerializer(b_data.annotate(rarity=F('item_id__rarity')), many=True).data
+    items = b_data.values('item_id').annotate(count=Count('item_id'), name=F('item_id__name'), image=F('item_id__image'), rarity=F('item_id__rarity'))
+    types = b_data.values('item_id__typ').annotate(count=Count('item_id__typ'), name=F('item_id__typ__name'))
+    rarities = b_data.values('item_id__rarity').annotate(count=Count('item_id__rarity'))
+    return Response({
+        'b': b,
+        'warps': warps,
+        'items': items,
+        'types': types,
+        'rarities': rarities
+    })
