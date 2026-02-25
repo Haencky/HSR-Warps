@@ -1,6 +1,12 @@
 # HSR Warptracker
 Django and React (Vite) based Gacha-Tracker for Honkai Starrail
 
+---
+**Quick Links:**
+- [GitHub Repository](https://github.com/Haencky/HSR-Warps)
+- [Dockerhub-Frontend](https://hub.docker.com/repository/docker/haenck/hsr-warptracker-frontend), [Dockerhub-Backend](https://hub.docker.com/repository/docker/haenck/hsr-warptracker-backend)
+---
+
 |**Service**|**Port**|**Most likely URL**|
 |---|---|---|
 |Frontend| 5173|http://localhost:5173|
@@ -35,7 +41,6 @@ curl -sSL https://raw.githubusercontent.com/Haencky/HSR-Warps/refs/heads/main/in
   - `Github`: Link to this repo
   - `Dockerhub`: Link to backend docker image
   - `Item IDs`: Link to a list of all items matching their id
-
  ---
 
 ## ⚖️ License & Disclaimer
@@ -45,10 +50,6 @@ This project is licensed under the **GNU General Public License v3.0**. See the 
 - **Open Source**: You are free to use, modify, and redistribute this software under the same license.
 - **Disclaimer**: This is a fan-made project and is **not** affiliated with or endorsed by HoYoverse (miHoYo). All game-related assets, characters, and names are the property of their respective owners.
 - **No Warranty**: This software is provided "as is" without any guarantees. Use it at your own risk.
-
-**Quick Links:**
-- [GitHub Repository](https://github.com/Haencky/HSR-Warps)
-- [Dockerhub-Frontend](https://hub.docker.com/repository/docker/haenck/hsr-warptracker-frontend), [Dockerhub-Backend](https://hub.docker.com/repository/docker/haenck/hsr-warptracker-backend)
 
 ---
 ## 📦 External Assets & Data
