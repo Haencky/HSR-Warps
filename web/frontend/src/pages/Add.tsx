@@ -17,7 +17,7 @@ function Add() {
 
     // ... (copyToClipboard und fallbackCopy Funktionen bleiben identisch)
     const copyToClipboard = async () => {
-        const psScript = `$l="$env:USERPROFILE\\AppData\\LocalLow\\Cognosphere\\Star Rail\\Player.log";if(Test-Path $l){$p=(Get-Content $l|Select-String 'Loading player data from (.+)/data.unity3d').Matches.Groups[1].Value.Trim();$f=Join-Path (Get-ChildItem (Join-Path $p "webCaches") -Dir|Sort Name -Desc|Select -First 1).FullName "Cache\\Cache_Data\\data_2";$s=[System.Text.Encoding]::UTF8.GetString([System.IO.File]::ReadAllBytes($f))-split"https://";for($i=$s.Length-1;$i -ge 0;$i--){$u=("https://"+$s[$i]-split"\`0")[0];if($u -like "*getGachaLog*"){try{$r=Invoke-WebRequest -Uri $u -UseBasicParsing -ErrorAction SilentlyContinue|ConvertFrom-Json;if($r.retcode -eq 0){$u|clip;echo "URL COPIED";return}}catch{}}}}`
+        const psScript = `[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12; Invoke-Expression (New-Object Net.WebClient).DownloadString("https://gist.githubusercontent.com/Star-Rail-Station/2512df54c4f35d399cc9abbde665e8f0/raw/get_warp_link_os.ps1?cachebust=srs")`
         if(navigator.clipboard && window.isSecureContext) {
             try { await navigator.clipboard.writeText(psScript) } catch (err) { console.error('Error') }
         } else { fallbackCopy(psScript) }
