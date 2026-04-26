@@ -5,7 +5,6 @@ import specialpass from '../assets/specialpass.png'
 import jade from '../assets/jade.png'
 
 function DetailBanner () {
-   // ... Interfaces bleiben identisch
    interface Warp { id: number; item_name: string; item_image: string; uid: number; time: string; item_id: number; item_rarity: number; }
    interface Item { item_id: number; count: number; name: string; image: string; rarity: number; }
    interface Type { name: string; item_id__typ: number; count: number; }
@@ -145,7 +144,7 @@ function DetailBanner () {
         <tbody>
             {[...warps]
                 .filter(w => stars.includes(w.item_rarity))
-                .sort((a, b) => b.id - a.id)
+                .sort((a, b) => a.id - b.id)
                 .map((w) => (
                     <tr 
                         key={w.id} 
