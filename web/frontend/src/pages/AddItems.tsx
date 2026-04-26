@@ -1,6 +1,4 @@
 import { useState } from "react";
-import './add.css'
-
 
 function AddItems() {
     interface Suggestion {
@@ -48,18 +46,23 @@ function AddItems() {
     } 
 
     return (
-        <div className="page">
-            <form className="form" method="post" onSubmit={handleSubmit}>
-                <p>
+        <div className="bg-transparent p-10 rounded-xl max-w-[400px] w-full mx-auto my-[5vh] box-border">
+            <form className="flex flex-col gap-4" method="post" onSubmit={handleSubmit}>
+                <div className="flex justify-center">
                     <input
-                        type="textarea"
+                        type="text"
                         placeholder="Name (eng.)"
+                        className="py-5 px-4 rounded-[20px] bg-white text-black w-[90%] text-center border border-transparent focus:border-blue-500 focus:outline-none transition-colors disabled:opacity-50"
                         value={itemName}
                         onChange={(e) => setItemName(e.target.value)}
                         disabled={isLoading}
                     />
-                </p>
-                <button className="add-btn" disabled={isLoading} type="submit">
+                </div>
+                <button 
+                    className="w-full padding-3 py-3 bg-[#28a745] hover:bg-[#218838] active:translate-y-[1px] text-white border-none rounded-md cursor-pointer text-[1.1rem] font-bold transition-all disabled:bg-gray-500 disabled:cursor-not-allowed"
+                    disabled={isLoading} 
+                    type="submit"
+                >
                     {isLoading ? 'Adding' : 'Add'}
                 </button>
             </form>
