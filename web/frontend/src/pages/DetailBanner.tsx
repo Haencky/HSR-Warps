@@ -55,10 +55,8 @@ function DetailBanner () {
    }
 
    return (
-    // h-screen und overflow-hidden verhindert das Scrollen der gesamten Seite
     <div className="mt-16 p-4 h-[calc(100vh-64px)] overflow-hidden grid grid-cols-1 md:grid-cols-2 gap-4 grid-rows-[auto_1fr]">
         
-        {/* Header Sektion: Banner Bild & Stats */}
         <div className="md:col-span-2 flex flex-col md:flex-row gap-4 h-auto max-h-[40vh]">
             <img 
                 src={`${VITE_API_URL}${banner?.item_image}`}
@@ -103,11 +101,17 @@ function DetailBanner () {
             </div>
         </div>
 
-        {/* Untere Sektion: Items (Links) & Warps (Rechts) */}
         <div className="flex flex-col overflow-hidden border border-white/5 bg-black/20 rounded-xl p-3">
             <h2 className="text-lg font-bold mb-2 border-b border-white/10 pb-1">Items</h2>
             <div className="overflow-y-auto pr-2 custom-scrollbar flex flex-wrap gap-3 content-start">
-                {items.sort((a,b) => (a.item_id === banner?.item_id ? -1 : 1)).map((i) => 
+                {items.sort((a, b) => {
+                if (a.item_id === banner?.item_id) return -1;
+                if (b.item_id === banner?.item_id) return 1;
+
+                if (b.rarity !== a.rarity) {
+                    return b.rarity - a.rarity;
+                }
+                return b.count - a.count;}).map((i) => 
                     <Link to={`/details/${i.item_id}`} key={i.item_id} className="group">
                         <div className={`relative border-2 rounded-lg transition-transform group-hover:scale-105 ${getRarityBorder(i.rarity)}`}
                              style={{ filter: i.item_id === banner?.item_id ? 'drop-shadow(0 0 4px #eab308)' : '' }}>
@@ -131,20 +135,44 @@ function DetailBanner () {
                 </div>
             </div>
             <div className="overflow-y-auto custom-scrollbar">
-                <table className="w-full text-xs">
-                    <thead className="sticky top-0 bg-neutral-900 shadow-sm">
-                        <tr>
-                            <th className="text-left p-2">Item</th>
-                            <th className="text-right p-2">Time</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {[...warps].filter(w => stars.includes(w.item_rarity)).sort((a,b) => b.id - a.id).map((w) => (
-                            <tr key={w.id} className={`hover:bg-white/5 border-b border-white/5 ${w.item_rarity === 5 ? 'text-amber-500 font-bold' : w.item_rarity === 4 ? 'text-purple-400' : 'text-gray-400'}`}>
-                                <td className="p-2"><Link to={`/details/${w.item_id}`}>{w.item_name}</Link></td>
-                                <td className="p-2 text-right opacity-60 font-mono">{w.time?.split('T')[0] || '-'}</td>
-                            </tr>
-                        ))}
+    <table className="w-full text-xs border-separate border-spacing-0">
+        <thead className="sticky top-0 bg-neutral-900 z-10">
+            <tr>
+                <th className="text-center p-2 font-semibold text-gray-400 border-b border-white/10">Item</th>
+                <th className="text-center p-2 font-semibold text-gray-400 border-b border-white/10">Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            {[...warps]
+                .filter(w => stars.includes(w.item_rarity))
+                .sort((a, b) => b.id - a.id)
+                .map((w) => (
+                    <tr 
+                        key={w.id} 
+                        className={`hover:bg-white/5 border-b border-white/5 transition-colors group ${
+                            w.item_rarity === 5 ? 'text-amber-500 font-bold' : 
+                            w.item_rarity === 4 ? 'text-purple-400' : 
+                            'text-light-blue-400'
+                        }`}
+                    >
+                        <td className="p-2 align-middle">
+                            <Link 
+                                to={`/details/${w.item_id}`} 
+                                className="hover:underline block"
+                            >
+                                {w.item_name}
+                            </Link>
+                        </td>
+                        <td className="p-2 text-left align-middle opacity-60 font-mono whitespace-nowrap">
+                            {w.time ? (
+                                <div className="flex flex-col items-center leading-tight">
+                                    <span>{w.time.split('T')[0]}</span>
+                                    <span className="text-[10px] opacity-50">{w.time.split('T')[1]?.slice(0, 5)}</span>
+                                </div>
+                            ) : '-'}
+                        </td>
+                    </tr>
+                    ))}
                     </tbody>
                 </table>
             </div>
