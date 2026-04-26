@@ -36,7 +36,7 @@ class WarpAnalyser():
             if g_id.gacha_type in (1,2):
                 warranted = True
                 winrate = None
-                last_win = filtered.filter(item_id__item_id__in=LOST).latest('item_id')
+                last_win = filtered.filter(item_id__item_id__in=LOST).latest('warp_id')
             types.append({'name': g_id.name, 'pity': pity, 'warranted': warranted, 'wr': winrate, 'c': amount, 'last_win': WarpSerializer(last_win).data if last_win else None, 'max_pity': max_pity, 'jade': jade, 'id': g_id.id})
         return types
     
