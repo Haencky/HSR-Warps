@@ -4,7 +4,8 @@ WIKI_URL = 'https://honkai-star-rail.fandom.com/wiki/'
 PRYDWEN_CHAR = 'https://www.prydwen.gg/page-data/star-rail/characters/'
 PRYDWEN_LC = 'https://www.prydwen.gg/page-data/star-rail/light-cones/page-data.json'
 IMAGE_URL = 'https://raw.githubusercontent.com/Mar-7th/StarRailRes/master/'
-ITEM_ID_URL = 'https://haencky.github.io/HSR-Warps/itemIDs.json'
+ITEM_ID_URL = 'https://raw.githubusercontent.com/Haencky/HSR-Warps/main/itemIDs.json'
+SPECIALS = 'https://raw.githubusercontent.com/Haencky/HSR-Warps/main/special.json'
 SIZE = 10000
 
 GACHA_TYPES = {
@@ -143,12 +144,4 @@ LOST = [
 ITEM_TYPES = {
     'en': ['Light Cone', 'Character'],
     'de': ['Lichtkegel', 'Figur'],
-}
-
-PLURALS = [ # prydwen uses a plural on these light cones
-    'Lingering Tear'
-]
-
-SPECIALS = { # items with different spelling in prydwen
-    'Evernight': 'march-7th-evernight',
 }

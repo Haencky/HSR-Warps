@@ -43,7 +43,7 @@ class Item(models.Model):
     item_id = models.IntegerField(primary_key=True)
     name = models.CharField(max_length=100)
     typ = models.ForeignKey(ItemType, on_delete=models.CASCADE, null=True)
-    image = models.ImageField(upload_to='items/')
+    image = models.ImageField(upload_to='items/', null=True, blank=True)
     wiki = models.URLField()
     rarity = models.IntegerField()
     path = models.ForeignKey(Path, on_delete=models.CASCADE, null=True)

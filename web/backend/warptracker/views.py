@@ -1,4 +1,4 @@
-# Copyright (C) 2026 Max Mustermann
+# Copyright (C) 2026 Haencky
 # SPDX-License-Identifier: GPL-3.0-or-later
 from rest_framework.decorators import api_view
 from django.db.models import F, Max, Q, Count
@@ -10,10 +10,8 @@ from io import BytesIO
 from django.core.files.images import ImageFile
 import requests
 from django.contrib import messages
-from .utils import WarpAnalyser, fetch_info, check_banner, getLCs
+from .utils import WarpAnalyser, fetch_info, check_banner, getLCs, getSpecials, update_all
 from .serializers import *
-import operator
-import json
 
 types = [1, 2, 11, 12, 21, 22]
 
@@ -45,7 +43,8 @@ def add_pulls_api(request):
         )
     
     lcs = getLCs()
-    added = {t: fetch_info(url, t, lcs) for t in types}
+    specials = getSpecials()
+    added = {t: fetch_info(url, t, lcs, special_data=specials) for t in types}
     print(added)
     results = [{'name': str(GachaType.objects.filter(gacha_type=t).values_list('name', flat=True)[0]), 'count': added[t]} for t in types if added[t] > 0]
     check_banner()
@@ -71,7 +70,7 @@ def add_items_manual_api(request):
         django_file = ImageFile(image_bytes, name=img_name)
         wiki = WIKI_URL + name.replace(' ', '_')
         if item_id in DOUBLES: wiki += '_(Light_Cone)'
-        rarity = 5 if item_id >= 23_000 else -1
+        rarity = 5
         Item.objects.create(
             item_id = item_id,
             eng_name = name,
@@ -127,3 +126,9 @@ def detail_banner_api(request, id:int):
         'types': types,
         'rarities': rarities
     })
+
+@api_view(['GET'])
+def update_image_api(request):
+   return Response({
+       'updated': update_all()
+   })

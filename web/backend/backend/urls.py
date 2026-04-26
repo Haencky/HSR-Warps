@@ -32,5 +32,6 @@ urlpatterns = [
     path('api/item_warps', warps_per_item_api),
     path('api/items', items_api),
     path('api/paths', path_api),
-    path('api/banner/<int:id>', detail_banner_api)
+    path('api/banner/<int:id>', detail_banner_api),
+    path('api/update', update_image_api)
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

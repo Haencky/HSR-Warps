@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Haencky
 # SPDX-License-Identifier: GPL-3.0-or-later
 from .models import Path, Item, ItemType, GachaType, Banner
-from .const import LOST, SIZE, WIKI_URL, IMAGE_URL, DOUBLES, GACHA_TYPES, PRYDWEN_CHAR, PRYDWEN_LC, PLURALS ,SPECIALS
+from .const import LOST, SIZE, WIKI_URL, IMAGE_URL, DOUBLES, GACHA_TYPES, PRYDWEN_CHAR, PRYDWEN_LC, SPECIALS
 from .serializers import *
 import time
 from urllib.parse import urlparse, urlunparse, urlencode, parse_qs
@@ -9,7 +9,6 @@ from django.utils.timezone import make_aware
 from django.core.files.images import ImageFile
 import requests
 from datetime import datetime
-from django.db.models import Max
 from io import BytesIO
 from collections import Counter
 from .models import Warp as W
@@ -103,6 +102,19 @@ class _Item():
     def __eq__(self, value):
         return self.id == value.id
 
+def getSpecials():
+    try:
+        r = requests.get(SPECIALS)
+    except requests.RequestException:
+        print('Could not fetch Specials')
+        return None
+    if r.status_code == 200:
+        data = r.json()
+        return data
+    else:
+        print('invalid status code for specials')
+        return None
+
 def getLCs ():
     """
     Fetches all light cones and returns their dictionary
@@ -132,16 +144,11 @@ def getLCPath(name: str, data:dict):
     """
     
     for lc in data:
-        if name in PLURALS:
-            if lc['name'].lower() == f'{name}s'.lower():
-                path = lc['path']
-                return path
-        else: 
-            if lc['name'].lower() == name.lower():
-                path = lc['path']
-                return path
+        if lc['name'].lower() == name.lower():
+            path = lc['path']
+            return path
 
-def fetch_info(url:str, gacha_type: int, lc_data: dict) -> dict:
+def fetch_info(url:str, gacha_type: int, lc_data: dict, special_data: dict) -> dict:
     """
     Fetches info from HSR Api
 
@@ -149,7 +156,9 @@ def fetch_info(url:str, gacha_type: int, lc_data: dict) -> dict:
         url(str): base url including authkey
         gacha_type(int): gacha type (e.g. 11 for event character)
         lcdata(dict): dictionary for all light cones
+        special_data(dict): dictionary for all special written characters/lcs in prydwen
     """
+    update_all()
     parsed = urlparse(url)
     query_dict = parse_qs(parsed.query)
 
@@ -234,8 +243,8 @@ def fetch_info(url:str, gacha_type: int, lc_data: dict) -> dict:
             else:
                 #img_name = 'characters/'
                 try:
-                    if name in SPECIALS:
-                        name = SPECIALS[name]
+                    if name in special_data:
+                        name = special_data[name]
                     r = requests.get(f'{PRYDWEN_CHAR}{name.replace(' ', '-').lower()}/page-data.json')
                 except requests.RequestException:
                     print(f'Error fetching data for {name}')
@@ -245,10 +254,15 @@ def fetch_info(url:str, gacha_type: int, lc_data: dict) -> dict:
             
             # download image
             img_name += f'{name}.png'
-            fetch_img = requests.get(f'{img_link}portrait/{id}.png') # fetch image
-
-            image_bytes = BytesIO(fetch_img.content) # save to byte stream
-            django_file = ImageFile(image_bytes, name=img_name)
+            try:
+                fetch_img = requests.get(f'{img_link}portrait/{id}.png') # fetch image
+                if fetch_img.status_code == 200:
+                    image_bytes = BytesIO(fetch_img.content) # save to byte stream
+                    django_file = ImageFile(image_bytes, name=img_name)
+                else:
+                    print(f'Could not fetch image for {name}')
+            except requests.RequestException:
+                print(f'Could not fetch image for {name}')
 
             display_path = path 
             if path == 'Hunt':
@@ -284,7 +298,8 @@ def fetch_info(url:str, gacha_type: int, lc_data: dict) -> dict:
         scraped = _scrape_info(name=warp.en_name, type=warp.en_type, id=warp.item_id)
         path_fk = scraped['path']
         img_path = scraped['image']
-        wiki = f'{WIKI_URL + warp.en_name}'
+        wiki_r = str(warp.en_name).replace(' ', '_')
+        wiki = f'{WIKI_URL + wiki_r}'
 
         Item.objects.create(
             item_id = warp.item_id,
@@ -336,13 +351,11 @@ def fetch_info(url:str, gacha_type: int, lc_data: dict) -> dict:
 
         warps = requests.get(url).json()['data']['list'] # request all warps
         if warps:
-            last = 0
-            l = W.objects.filter(uid=warps[0]['uid'], gacha_id__gacha_type__gacha_type=gacha_type).aggregate(last=Max('warp_id'))
-            last_ = l.get('last')
-            last = last_ if last_ is not None else 0
+            l = W.objects.filter(uid=warps[0]['uid'], gacha_id__gacha_type__gacha_type=gacha_type).values_list('warp_id', flat=True)
+            last = list(l)
             for warp in warps:
-                if int(warp['id']) <= last: # break loop if nothing new is added
-                    return 0
+                if int(warp['id']) in last: # break loop if nothing new is added
+                    continue
                 item_id = int(warp['item_id'])
                 w = Warp(
                     item_id=warp['item_id'],
@@ -362,7 +375,7 @@ def fetch_info(url:str, gacha_type: int, lc_data: dict) -> dict:
                 if not _check_item(item_id):
                     create_item(w)
                 
-                if int(w.id) > last:
+                if int(w.id) not in last:
                     counter += 1
                     _add_warp(w)
                 time.sleep(0.1)
@@ -382,3 +395,30 @@ def check_banner():
             item = w[0].item_id
             b.item_id = item
             b.save()
+
+def update_image(item: Item):
+    item_id = item.item_id
+    img_link = IMAGE_URL + 'image/light_cone_' if item_id >= 20_000 else IMAGE_URL + 'image/character_' # ids 20000+ are LCs
+    img_name = f'{item.eng_name}.png'
+    name = item.name
+
+    try:
+        fetch_img = requests.get(f'{img_link}portrait/{item_id}.png') # fetch image
+        if fetch_img.status_code == 200:
+            image_bytes = BytesIO(fetch_img.content) # save to byte stream
+            django_file = ImageFile(image_bytes, name=img_name)
+            item.image = django_file
+            item.save()
+        else:
+            print(f'Could not fetch image for {name}')
+    except requests.RequestException:
+        print(f'Could not fetch image for {name}')
+
+def update_all() -> list:
+    """
+    updates all images
+    """
+    missing = Item.objects.filter(image='')
+    for x in missing:
+        update_image(x)
+    return [m.name for m in missing]
