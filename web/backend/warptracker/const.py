@@ -127,11 +127,14 @@ LOST = [
     1101, # Bronya
     1102, # Seele
     1104, # Gepard
+    1006, # Silverwolf
     1107, # Clara
     1205, # Blade
     1208, # Fu Xuan
     1209, # Yanqing
     1211, # Bailu
+    1221, # Yunli
+    1302, # Argenti
 
     23000, # Night on the Milky Way
     23002, # Something Irreplaceable
