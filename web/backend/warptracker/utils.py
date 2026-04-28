@@ -12,6 +12,7 @@ from datetime import datetime
 from io import BytesIO
 from collections import Counter
 from .models import Warp as W
+from django.core.exceptions import ObjectDoesNotExist
 
 class WarpAnalyser():
     @staticmethod
@@ -24,20 +25,22 @@ class WarpAnalyser():
             jade = amount * 160 # 160 jade = 1 Warp
             five_stars = filtered.filter(item_id__rarity=5)
             wins = five_stars.exclude(item_id__item_id__in=LOST)
-            last = five_stars.latest('warp_id')
-            pity = filtered.filter(warp_id__gt=last.warp_id).count()
-            warranted = last.item_id.item_id in LOST # last 5⭐ pull was a 50/50 lost
+            try: 
+                last = wins.latest('warp_id')
+                pity = filtered.filter(warp_id__gt=last.warp_id).count()
+                warranted = last.item_id.item_id in LOST # last 5⭐ pull was a 50/50 lost
+            except ObjectDoesNotExist:
+                last = None
+                pity = '?'
+                warranted = None
             winrate = round(wins.count() / five_stars.count(), 2) * 100 # if never lost lost rate would be 1, modulo 1 to remove this
-            try:
-                last_win = wins.latest('warp_id')
-            except:
-                pass
 
             if g_id.gacha_type in (1,2):
                 warranted = True
                 winrate = None
-                last_win = filtered.filter(item_id__item_id__in=LOST).latest('warp_id')
-            types.append({'name': g_id.name, 'pity': pity, 'warranted': warranted, 'wr': winrate, 'c': amount, 'last_win': WarpSerializer(last_win).data if last_win else None, 'max_pity': max_pity, 'jade': jade, 'id': g_id.id})
+                last = filtered.filter(item_id__item_id__in=LOST).latest('warp_id')
+                pity = filtered.filter(warp_id__gt=last.warp_id).count()
+            types.append({'name': g_id.name, 'pity': pity, 'warranted': warranted, 'wr': winrate, 'c': amount, 'last_win': WarpSerializer(last).data if last else None, 'max_pity': max_pity, 'jade': jade, 'id': g_id.id})
         return types
     
     @staticmethod
