@@ -26,10 +26,12 @@ class WarpAnalyser():
             five_stars = filtered.filter(item_id__rarity=5)
             wins = five_stars.exclude(item_id__item_id__in=LOST)
             try:
-                last = wins.latest('warp_id')
+                last_win = wins.latest('warp_id')
+                last = five_stars.latest('warp_id')
                 pity = filtered.filter(warp_id__gt=last.warp_id).count()
                 warranted = last.item_id.item_id in LOST # last 5⭐ pull was a 50/50 lost
             except ObjectDoesNotExist:
+                last_win = None
                 last = None
                 pity = '?'
                 warranted = None
@@ -40,13 +42,13 @@ class WarpAnalyser():
 
             if g_id.gacha_type in (1,2):
                     try:
-                        last = filtered.filter(item_id__item_id__in=LOST).latest('warp_id')
-                        pity = filtered.filter(warp_id__gt=last.warp_id).count()
+                        last_win = filtered.filter(item_id__item_id__in=LOST).latest('warp_id')
+                        pity = filtered.filter(warp_id__gt=last_win.warp_id).count()
                     except ObjectDoesNotExist:
                         pity = '?'
                     winrate = None
 
-            types.append({'name': g_id.name, 'pity': pity, 'warranted': warranted, 'wr': winrate, 'c': amount, 'last_win': WarpSerializer(last).data if last else None, 'max_pity': max_pity, 'jade': jade, 'id': g_id.id})
+            types.append({'name': g_id.name, 'pity': pity, 'warranted': warranted, 'wr': winrate, 'c': amount, 'last_win': WarpSerializer(last_win).data if last_win else None, 'max_pity': max_pity, 'jade': jade, 'id': g_id.id})
         return types
     
     @staticmethod
