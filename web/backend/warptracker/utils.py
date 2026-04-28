@@ -33,13 +33,10 @@ class WarpAnalyser():
                 last = None
                 pity = '?'
                 warranted = None
-            winrate = round(wins.count() / five_stars.count(), 2) * 100 # if never lost lost rate would be 1, modulo 1 to remove this
-
-            if g_id.gacha_type in (1,2):
-                warranted = True
+            try:
+                winrate = round(wins.count() / five_stars.count(), 2) * 100 # if never lost lost rate would be 1, modulo 1 to remove this
+            except ZeroDivisionError:
                 winrate = None
-                last = filtered.filter(item_id__item_id__in=LOST).latest('warp_id')
-                pity = filtered.filter(warp_id__gt=last.warp_id).count()
             types.append({'name': g_id.name, 'pity': pity, 'warranted': warranted, 'wr': winrate, 'c': amount, 'last_win': WarpSerializer(last).data if last else None, 'max_pity': max_pity, 'jade': jade, 'id': g_id.id})
         return types
     
