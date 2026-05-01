@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react"
+import { Link } from "react-router";
 
 function Home() {
   interface LastWin {
     item_image: string;
     item_name: string;
   }
+
+  interface Warp { id: number; item_name: string; item_image: string; uid: number; time: string; item_id: number; item_rarity: number; item_eng_name: string; pity: number;}
 
   interface DashboardType {
     id: number;
@@ -15,14 +18,21 @@ function Home() {
     c: number;
     max_pity: number;
     last_win: LastWin | null;
+    avg_pity: number;
+    warps:  Warp[];
   }
 
   const [types, setTypes] = useState<DashboardType[]>([])
+  const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [stars, setStars] = useState<number[]>([4,5])
+  const [searchTerm, setSearchTerm] = useState("")
   const VITE_API_URL = window._env_.BACKEND_URL
 
   useEffect(() => {
     fetchTypes()
   }, [])
+
+  const selectedType = types.find(t => t.id === selectedId);
 
   const fetchTypes = async () => {
     try {
@@ -35,12 +45,23 @@ function Home() {
   }
 
   return (
-    <div className="mt-20 p-6 w-full min-h-[calc(100vh-80px)] flex flex-wrap gap-8 justify-center items-start">
-      {types.map((t) => (
-        <div 
-          key={t.id} 
-          className="relative overflow-hidden rounded-2xl bg-neutral-900/50 border border-white/10 shadow-2xl backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] hover:border-white/20 w-full max-w-[450px] grid grid-cols-[120px_1fr] gap-4 p-4"
-        >
+    <div className="mt-20 p-6 w-full min-h-[calc(100vh-80px)]">
+      <div className={`transition-all duration-500 ${
+        selectedId 
+          ? "grid grid-cols-1 lg:grid-cols-[450px_1fr] gap-8 items-start" 
+          : "flex flex-wrap gap-8 justify-center"
+      }`}>
+        
+
+        <div className={`flex flex-wrap gap-8 ${selectedId ? "flex-col w-full" : "justify-center"}`}>
+          {types.map((t) => (
+            <div 
+              key={t.id} 
+              onClick={() => setSelectedId(t.id)}
+              className={`cursor-pointer relative overflow-hidden rounded-2xl bg-neutral-900/50 border shadow-2xl backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] w-full max-w-[450px] grid grid-cols-[120px_1fr] gap-4 p-4
+                ${selectedId === t.id ? "border-amber-500/50 ring-1 ring-amber-500/20" : "border-white/10 hover:border-white/20"}
+              `}
+            >
           <div className="flex items-center justify-center bg-black/40 rounded-xl overflow-hidden h-[120px]">
             {t.last_win?.item_image ? (
               <img
@@ -76,12 +97,16 @@ function Home() {
                 )}
               </div>
 
-              {t.wr !== null && (
                 <div className="text-sm">
-                  <span className="text-gray-400 uppercase text-[10px] tracking-wider inline-block mr-2">Winrate:</span>
-                  <span className="text-white font-mono">{t.wr}%</span>
+                  {t.wr !== null && (
+                    <div>
+                      <span className="text-gray-400 uppercase text-[10px] tracking-wider inline-block mr-2">Winrate:</span>
+                      <span className="text-white font-mono">{t.wr}%</span>
+                    </div>
+                  )}
+                  <span className="text-gray-400 uppercase text-[10px] tracking-wider inline-block mr-2">Expected Pulls:</span>
+                  <span className="text-white font-mono">{t.avg_pity}</span>
                 </div>
-              )}
             </div>
 
             <div className="mt-3 pt-2 border-t border-white/5 flex justify-between items-baseline">
@@ -90,7 +115,110 @@ function Home() {
             </div>
           </div>
         </div>
+        ))}
+        </div>
+        <div>
+        {selectedId && (
+        <div className="w-full bg-neutral-900/30 border border-white/5 rounded-2xl p-6 min-h-[600px] animate-in fade-in slide-in-from-right-4 duration-500 min-w-0">
+          <div className="flex justify-between items-center mb-6">
+             <h2 className="text-2xl font-bold text-white">{selectedType?.name}</h2>
+             <button 
+               onClick={() => setSelectedId(null)}
+               className="text-gray-400 hover:text-white text-sm"
+             >
+              Close ✕
+             </button>
+          </div>
+          <div className="text-gray-400">
+            {selectedType && (
+  <div className="w-full space-y-4 animate-in fade-in slide-in-from-right-4 duration-500">
+
+  <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-3 border-b border-white/10 pb-3">
+    
+    <div className="relative w-full max-w-md">
+      <input
+        type="text"
+        placeholder={`Search in ${selectedType.name}...`}
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="w-full bg-white/5 border border-white/10 rounded-lg py-1.5 pl-3 pr-10 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-amber-500/50 transition-all"
+      />
+      {searchTerm && (
+        <button 
+          onClick={() => setSearchTerm("")}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
+        >
+          ✕
+        </button>
+      )}
+    </div>
+    <div className="flex gap-1">
+      {[3, 4, 5].map((s) => (
+        <button key={s} 
+          className={`px-2 py-0.5 text-xs rounded-md border transition-colors ${
+            stars.includes(s) ? 'bg-white/10 border-white/20 text-white' : 'opacity-30 border-transparent text-gray-400'
+          }`}
+          onClick={() => setStars(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])}
+        > 
+          {s}⭐ 
+        </button>
       ))}
+    </div>
+  </div>
+
+  <div className="overflow-y-auto custom-scrollbar max-h-[70vh]">
+    <table className="w-full text-xs border-separate border-spacing-0">
+      <thead className="sticky top-0 bg-neutral-900 z-10">
+        <tr>
+          <th className="text-left p-2 font-semibold text-gray-400 border-b border-white/10">Pity</th>
+          <th className="text-center p-2 font-semibold text-gray-400 border-b border-white/10">Item</th>
+          <th className="text-right p-2 font-semibold text-gray-400 border-b border-white/10">Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        {selectedType.warps
+          .filter(w => 
+            stars.includes(w.item_rarity) && 
+            (w.item_name.toLowerCase().includes(searchTerm.toLowerCase()) || w.item_eng_name.toLowerCase().includes(searchTerm.toLowerCase()))
+          )
+          .sort((a, b) => b.id - a.id) 
+          .map((w) => (
+            <tr key={w.id} className="hover:bg-white/5 transition-colors group">
+              <td className="p-2 align-middle text-left border-b border-white/5">
+                {w.pity}
+              </td>
+              <td className={`p-2 align-middle border-b border-white/5 ${
+                w.item_rarity === 5 ? 'text-amber-500 font-bold' : 
+                w.item_rarity === 4 ? 'text-purple-400' : 'text-sky-400'
+              }`}>
+                <Link to={`/details/${w.item_id}`}>
+                  {w.item_name}
+                </Link>
+              </td>
+              <td className="p-2 text-right align-middle border-b border-white/5 opacity-60 font-mono text-[10px] text-gray-400">
+                {w.time.split('T')[0]} - {w.time.split('T')[1].slice(0,8)}
+              </td>
+            </tr>
+          ))}
+      </tbody>
+    </table>
+
+    {selectedType.warps.filter(w => 
+      stars.includes(w.item_rarity) && 
+      w.item_name.toLowerCase().includes(searchTerm.toLowerCase())
+    ).length === 0 && (
+      <div className="p-10 text-center text-gray-500 italic text-sm">
+        {searchTerm ? `No results for "${searchTerm}"` : "No warps found."}
+      </div>
+    )}
+  </div>
+</div>
+)}
+          </div>
+        </div>
+      )}
+        </div>
+      </div>
     </div>
   )
 }

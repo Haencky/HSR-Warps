@@ -13,6 +13,8 @@ from io import BytesIO
 from collections import Counter
 from .models import Warp as W
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Avg, Sum
+import numpy as np
 
 class WarpAnalyser():
     @staticmethod
@@ -24,31 +26,53 @@ class WarpAnalyser():
             amount = filtered.count()
             jade = amount * 160 # 160 jade = 1 Warp
             five_stars = filtered.filter(item_id__rarity=5)
+
             wins = five_stars.exclude(item_id__item_id__in=LOST)
+            invest = []
+            for d in wins:
+                try:
+                    prev_limited = wins.filter(warp_id__lt=d.warp_id).latest('warp_id')
+                    start_id = prev_limited.warp_id
+                except ObjectDoesNotExist:
+                    start_id = 0
+                query = five_stars.filter(warp_id__gt=start_id, warp_id__lte=d.warp_id)
+                ff = query.count() < 2
+                success_pity = query.aggregate(Sum('pity'))['pity__sum']
+                invest.append({'ff': ff, 'success_pity': success_pity})
+            med_pulls = np.median([x['success_pity'] for x in invest]) # median of pulls needed for a limited character
+            avg_ff = 100 * np.average([x['ff'] for x in invest]) # avg 50/50 loss
             try:
                 last_win = wins.latest('warp_id')
                 last = five_stars.latest('warp_id')
                 pity = filtered.filter(warp_id__gt=last.warp_id).count()
-                warranted = last.item_id.item_id in LOST # last 5⭐ pull was a 50/50 lost
+                warranted = last_win.item_id.item_id in LOST # last 5⭐ pull was a 50/50 lost
             except ObjectDoesNotExist:
                 last_win = None
                 last = None
                 pity = '?'
                 warranted = None
-            try:
-                winrate = round(wins.count() / five_stars.count(), 2) * 100 # if never lost lost rate would be 1, modulo 1 to remove this
-            except ZeroDivisionError:
-                winrate = 0
 
             if g_id.gacha_type in (1,2):
                     try:
                         last_win = filtered.filter(item_id__item_id__in=LOST).latest('warp_id')
                         pity = filtered.filter(warp_id__gt=last_win.warp_id).count()
+                        query = filtered.filter(item_id__item_id__in=LOST).aggregate(Avg('pity'))
+                        med_pulls = query['pity__avg']
                     except ObjectDoesNotExist:
                         pity = '?'
-                    winrate = None
 
-            types.append({'name': g_id.name, 'pity': pity, 'warranted': warranted, 'wr': winrate, 'c': amount, 'last_win': WarpSerializer(last_win).data if last_win else None, 'max_pity': max_pity, 'jade': jade, 'id': g_id.id})
+            types.append({
+                            'name': g_id.name,
+                            'pity': pity,
+                            'warranted': warranted,
+                            'wr': avg_ff if not np.isnan(avg_ff) else None,
+                            'avg_pity': med_pulls if not np.isnan(med_pulls) else None,
+                            'c': amount, 'last_win': WarpSerializer(last_win).data if last_win else None,
+                            'max_pity': max_pity,
+                            'jade': jade,
+                            'id': g_id.id,
+                            'warps': WarpSerializer(filtered, many=True).data
+                        })
         return types
     
     @staticmethod
@@ -184,13 +208,16 @@ def fetch_info(url:str, gacha_type: int, lc_data: dict, special_data: dict) -> d
         """
         return Item.objects.filter(pk=id).exists()
     
-    def _add_warp(warp: Warp):
+    def _add_warp(warp: Warp, current_pity:int) -> bool:
         """
         Adds a new warp to the database
 
         Params:
             warp(Warp): warp obtained by the API
-            userid(int): ID of User
+            current_pity(int): pity of last object of this banner
+
+        Returns:
+            True if current pull is 5 star; false else
         """
 
         # get gacha type or create
@@ -214,14 +241,19 @@ def fetch_info(url:str, gacha_type: int, lc_data: dict, special_data: dict) -> d
             )
         banner_id = Banner.objects.get(gacha_id=warp.gacha_id)
 
+        item = Item.objects.get(item_id=warp.item_id)
+
         W.objects.create(
             warp_id = warp.id,
             uid = warp.uid,
             gacha_id = banner_id,
-            item_id = Item.objects.get(item_id=warp.item_id),
+            item_id = item,
             time=make_aware(datetime.strptime(warp.time, "%Y-%m-%d %H:%M:%S")),
-
+            pity=current_pity
         )
+        if item.rarity == 5:
+            return True
+        return False
     
     def create_item(warp: Warp):
         """
@@ -350,6 +382,10 @@ def fetch_info(url:str, gacha_type: int, lc_data: dict, special_data: dict) -> d
         return {item.id: {'name': item.name, 'type': item.type} for item in _items}
     
     en_items = _fetch_en(url)
+    try:
+        last_warp = W.objects.filter(gacha_id__gacha_type__gacha_type=gacha_type).latest('warp_id')
+    except:
+        last_warp = None
 
     def _fetch(url):
         """
@@ -359,12 +395,15 @@ def fetch_info(url:str, gacha_type: int, lc_data: dict, special_data: dict) -> d
             urL(str): url to HSR Api
         """
         counter = 0
-
-        warps = requests.get(url).json()['data']['list'] # request all warps
+        current_pity = last_warp.pity if last_warp else 0
+        try:
+            warps = requests.get(url).json()['data']['list'] # request all warps
+        except requests.RequestException, TypeError:
+            warps = None
         if warps:
             l = W.objects.filter(uid=warps[0]['uid'], gacha_id__gacha_type__gacha_type=gacha_type).values_list('warp_id', flat=True)
             last = list(l)
-            for warp in warps:
+            for warp in warps[::-1]:
                 if int(warp['id']) in last: # break loop if nothing new is added
                     continue
                 item_id = int(warp['item_id'])
@@ -388,7 +427,9 @@ def fetch_info(url:str, gacha_type: int, lc_data: dict, special_data: dict) -> d
                 
                 if int(w.id) not in last:
                     counter += 1
-                    _add_warp(w)
+                    if _add_warp(w, current_pity): # returns True if last pull was a 5 star
+                        current_pity = 0
+                    current_pity+=1
                 time.sleep(0.1)
             return counter
         else:

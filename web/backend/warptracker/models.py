@@ -101,6 +101,7 @@ class Warp(models.Model):
     gacha_id = models.ForeignKey(Banner, on_delete=models.CASCADE)
     item_id = models.ForeignKey(Item, on_delete=models.CASCADE)
     time = models.DateTimeField(null=True, blank=True)
+    pity = models.IntegerField(null=True, blank=True) 
 
     def __str__(self):
         return f"{self.id}: {self.gacha_id.item_id.name if self.gacha_id.item_id else self.gacha_id.gacha_id}; {self.item_id.name}; {self.time}"
