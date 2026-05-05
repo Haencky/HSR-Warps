@@ -29,6 +29,13 @@ def index_api(request):
     return Response(WarpAnalyser.warps_per_type())
 
 @api_view(['GET'])
+def detail_type_api(request, gacha_id:int):
+    ws = Warp.objects.filter(gacha_id__gacha_type=gacha_id).order_by('-warp_id')
+    return Response({
+        'warps': WarpSerializer(ws, many=True).data
+    })
+
+@api_view(['GET'])
 def banners_api(request):
     w_per_banner = Warp.objects.all().values('gacha_id', item=F('gacha_id__item_id__name'), item_image=F('gacha_id__item_id__image'), item_type=F('gacha_id__item_id__typ__name'), hsr_gacha_id=F('gacha_id__gacha_id'), gacha_type=F('gacha_id__gacha_type__gacha_type')).annotate(count=Count('id'), obtained=Max('item_id__rarity', filter=~Q(item_id__item_id__in=LOST)), ff=Count('item_id__rarity', filter=Q(item_id__item_id__in=LOST))).order_by('-gacha_id')
     return Response(WarpsPerBannerSerializer(w_per_banner, many=True, context={'request': request}).data)
@@ -132,3 +139,9 @@ def update_image_api(request):
    return Response({
        'updated': update_all()
    })
+
+@api_view(['GET'])
+def test(rwquest):
+    for w in Warp.objects.filter(gacha_id__gacha_id=1).order_by('-warp_id'):
+        print(f'{w.warp_id} - {w.item_id}')
+    return Response({}) 

@@ -14,65 +14,58 @@ from collections import Counter
 from .models import Warp as W
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Avg, Sum
+import pandas as pd
 import numpy as np
 
 class WarpAnalyser():
     @staticmethod
     def warps_per_type():
+        all_warps = W.objects.all().select_related('item_id', 'gacha_id').order_by('warp_id').values('warp_id', 'pity', 'item_id__rarity', 'item_id__item_id', 'item_id__name', 'gacha_id__gacha_type', 'item_id__image')
+        df = pd.DataFrame(list(all_warps), index=all_warps.values_list('warp_id'))
+        df['item_id__image'] = df['item_id__image'].apply(lambda x: f'/media/{x}') 
+
+        def process_banner(group: pd.DataFrame, g_id: GachaType):
+            five_stars: pd.DataFrame = group[group['item_id__rarity'] == 5].copy()
+            five_stars['is_loss'] = five_stars['item_id__item_id'].isin(LOST).astype(bool)
+            w_n_l = []
+            is_g = False
+
+            for _, row in five_stars.iterrows():
+                if not is_g:
+                    w_n_l.append(int(not row['is_loss']))
+                    if row['is_loss']:
+                        is_g = True
+                else:
+                    is_g = False
+            avg_ff = round(100 * np.mean(w_n_l), 2) if w_n_l else None
+            last_5s = five_stars.iloc[-1] if not five_stars.empty else None
+            if last_5s is not None:
+                pity = int(group[group['warp_id'] > last_5s['warp_id']].shape[0])
+                warranted = bool(last_5s['is_loss'])
+            else:
+                pity = group.shape[0]
+                warranted = False
+            avg_pity = round(five_stars['pity'].median(), 1)
+            avg_pity = avg_pity if not np.isnan(avg_pity) else None
+
+            return {
+                'name': g_id.name,
+                'pity': pity,
+                'gacha_type': g_id.gacha_type,
+                'warranted': warranted,
+                'wr': avg_ff,
+                'avg_pity': avg_pity,
+                'c': group.shape[0],
+                'id': g_id.id,
+                'last_win': last_5s.to_dict(),
+                'max_pity': g_id.max_pity,
+            }
+
+
         types = []
-        for g_id in GachaType.objects.all():
-            max_pity = g_id.max_pity
-            filtered = W.objects.filter(gacha_id__gacha_type=g_id.id)
-            amount = filtered.count()
-            jade = amount * 160 # 160 jade = 1 Warp
-            five_stars = filtered.filter(item_id__rarity=5)
-
-            wins = five_stars.exclude(item_id__item_id__in=LOST)
-            invest = []
-            for d in wins:
-                try:
-                    prev_limited = wins.filter(warp_id__lt=d.warp_id).latest('warp_id')
-                    start_id = prev_limited.warp_id
-                except ObjectDoesNotExist:
-                    start_id = 0
-                query = five_stars.filter(warp_id__gt=start_id, warp_id__lte=d.warp_id)
-                ff = query.count() < 2
-                success_pity = query.aggregate(Sum('pity'))['pity__sum']
-                invest.append({'ff': ff, 'success_pity': success_pity})
-            med_pulls = np.median([x['success_pity'] for x in invest]) # median of pulls needed for a limited character
-            avg_ff = 100 * np.average([x['ff'] for x in invest]) # avg 50/50 loss
-            try:
-                last_win = wins.latest('warp_id')
-                last = five_stars.latest('warp_id')
-                pity = filtered.filter(warp_id__gt=last.warp_id).count()
-                warranted = last_win.item_id.item_id in LOST # last 5⭐ pull was a 50/50 lost
-            except ObjectDoesNotExist:
-                last_win = None
-                last = None
-                pity = '?'
-                warranted = None
-
-            if g_id.gacha_type in (1,2):
-                    try:
-                        last_win = filtered.filter(item_id__item_id__in=LOST).latest('warp_id')
-                        pity = filtered.filter(warp_id__gt=last_win.warp_id).count()
-                        query = filtered.filter(item_id__item_id__in=LOST).aggregate(Avg('pity'))
-                        med_pulls = query['pity__avg']
-                    except ObjectDoesNotExist:
-                        pity = '?'
-
-            types.append({
-                            'name': g_id.name,
-                            'pity': pity,
-                            'warranted': warranted,
-                            'wr': avg_ff if not np.isnan(avg_ff) else None,
-                            'avg_pity': med_pulls if not np.isnan(med_pulls) else None,
-                            'c': amount, 'last_win': WarpSerializer(last_win).data if last_win else None,
-                            'max_pity': max_pity,
-                            'jade': jade,
-                            'id': g_id.id,
-                            'warps': WarpSerializer(filtered, many=True).data
-                        })
+        for g in GachaType.objects.all():
+            b_data = df[df['gacha_id__gacha_type'] == g.id]
+            types.append(process_banner(b_data, g))
         return types
     
     @staticmethod
@@ -249,7 +242,7 @@ def fetch_info(url:str, gacha_type: int, lc_data: dict, special_data: dict) -> d
             gacha_id = banner_id,
             item_id = item,
             time=make_aware(datetime.strptime(warp.time, "%Y-%m-%d %H:%M:%S")),
-            pity=current_pity
+            pity=current_pity,
         )
         if item.rarity == 5:
             return True

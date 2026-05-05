@@ -3,14 +3,15 @@ import { Link } from "react-router";
 
 function Home() {
   interface LastWin {
-    item_image: string;
-    item_name: string;
+    item_id__image: string;
+    item_id__name: string;
   }
 
-  interface Warp { id: number; item_name: string; item_image: string; uid: number; time: string; item_id: number; item_rarity: number; item_eng_name: string; pity: number;}
+  interface Warp { id: number; item_name: string; uid: number; time: string; item_id: number; item_rarity: number; item_eng_name: string; pity: number; warp_id: number}
 
   interface DashboardType {
     id: number;
+    gacha_type: number;
     name: string;
     pity: number;
     warranted: boolean;
@@ -19,13 +20,14 @@ function Home() {
     max_pity: number;
     last_win: LastWin | null;
     avg_pity: number;
-    warps:  Warp[];
   }
 
   const [types, setTypes] = useState<DashboardType[]>([])
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [stars, setStars] = useState<number[]>([4,5])
   const [searchTerm, setSearchTerm] = useState("")
+  const [warps, setWarps] = useState<Warp[]>([])
+  const [isLoading, setIsLoading] = useState<boolean>(false)
   const VITE_API_URL = window._env_.BACKEND_URL
 
   useEffect(() => {
@@ -43,6 +45,21 @@ function Home() {
       console.error(err)
     }
   }
+
+  const fetchWarps = async (gachaID: number) => {
+    setIsLoading(true)
+    await fetch(`${VITE_API_URL}/api/detail-types/${gachaID}`)
+      .then(res => res.json())
+      .then(data => setWarps(data.warps))
+      .catch(e => console.error(e)) 
+    setIsLoading(false)
+  }
+
+  useEffect(() => {
+    if (selectedId) {
+      fetchWarps(selectedId)
+    }
+  }, [selectedId])
 
   return (
     <div className="mt-20 p-6 w-full min-h-[calc(100vh-80px)]">
@@ -63,14 +80,14 @@ function Home() {
               `}
             >
           <div className="flex items-center justify-center bg-black/40 rounded-xl overflow-hidden h-[120px]">
-            {t.last_win?.item_image ? (
+            {t.last_win?.item_id__image ? (
               <img
-                src={`${VITE_API_URL}${t.last_win.item_image}`}
-                alt={t.last_win.item_name}
+                src={`${VITE_API_URL}${t.last_win.item_id__image}`}
+                alt={t.last_win.item_id__name}
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="text-gray-600 text-xs text-center p-2">{t.last_win?.item_name}</div>
+              <div className="text-gray-600 text-xs text-center p-2">{t.last_win?.item_id__name}</div>
             )}
           </div>
 
@@ -90,7 +107,7 @@ function Home() {
                 <span className="text-amber-500 font-mono text-lg font-bold">
                   {t.pity} <span className="text-gray-500 font-normal">/</span> {t.max_pity}
                 </span>
-                {t.warranted && t.id !== 1 && (
+                {t.warranted && (t.gacha_type !== 1 && t.gacha_type !== 2) && (
                   <span className="ml-2 text-[10px] bg-amber-500/20 text-amber-500 px-1.5 py-0.5 rounded uppercase font-bold">
                     Guaranteed
                   </span>
@@ -98,14 +115,14 @@ function Home() {
               </div>
 
                 <div className="text-sm">
-                  {t.wr !== null && (
+                  <span className="text-gray-400 uppercase text-[10px] tracking-wider inline-block mr-2">Expected Pulls:</span>
+                  <span className="text-white font-mono">{t.avg_pity}</span>
+                  {t.wr !== null && (t.gacha_type !== 1 && t.gacha_type !== 2) && (
                     <div>
                       <span className="text-gray-400 uppercase text-[10px] tracking-wider inline-block mr-2">Winrate:</span>
                       <span className="text-white font-mono">{t.wr}%</span>
                     </div>
                   )}
-                  <span className="text-gray-400 uppercase text-[10px] tracking-wider inline-block mr-2">Expected Pulls:</span>
-                  <span className="text-white font-mono">{t.avg_pity}</span>
                 </div>
             </div>
 
@@ -167,7 +184,12 @@ function Home() {
   </div>
 
   <div className="overflow-y-auto custom-scrollbar max-h-[70vh]">
-    <table className="w-full text-xs border-separate border-spacing-0">
+    {isLoading?
+      <div role="status" className="flex justify-center items-center py-10 w-full">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+      :
+      <table className="w-full text-xs border-separate border-spacing-0">
       <thead className="sticky top-0 bg-neutral-900 z-10">
         <tr>
           <th className="text-left p-2 font-semibold text-gray-400 border-b border-white/10">Pity</th>
@@ -176,12 +198,11 @@ function Home() {
         </tr>
       </thead>
       <tbody>
-        {selectedType.warps
-          .filter(w => 
+        {warps.filter(w => 
             stars.includes(w.item_rarity) && 
             (w.item_name.toLowerCase().includes(searchTerm.toLowerCase()) || w.item_eng_name.toLowerCase().includes(searchTerm.toLowerCase()))
           )
-          .sort((a, b) => b.id - a.id) 
+          .sort((a, b) => b.warp_id - a.warp_id) 
           .map((w) => (
             <tr key={w.id} className="hover:bg-white/5 transition-colors group">
               <td className="p-2 align-middle text-left border-b border-white/5">
@@ -196,16 +217,17 @@ function Home() {
                 </Link>
               </td>
               <td className="p-2 text-right align-middle border-b border-white/5 opacity-60 font-mono text-[10px] text-gray-400">
-                {w.time.split('T')[0]} - {w.time.split('T')[1].slice(0,8)}
+                {w.time? `${w.time.split('T')[0]} ${w.time.split('T')[1].slice(0,8)}` : '-'}
               </td>
             </tr>
           ))}
       </tbody>
     </table>
+    }
 
-    {selectedType.warps.filter(w => 
+    {warps.filter(w => 
       stars.includes(w.item_rarity) && 
-      w.item_name.toLowerCase().includes(searchTerm.toLowerCase())
+      (w.item_name.toLowerCase().includes(searchTerm.toLowerCase()) || w.item_eng_name.toLowerCase().includes(searchTerm.toLowerCase()))
     ).length === 0 && (
       <div className="p-10 text-center text-gray-500 italic text-sm">
         {searchTerm ? `No results for "${searchTerm}"` : "No warps found."}
