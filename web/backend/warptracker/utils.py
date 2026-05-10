@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Haencky
 # SPDX-License-Identifier: GPL-3.0-or-later
 from .models import Path, Item, ItemType, GachaType, Banner
-from .const import LOST, SIZE, WIKI_URL, IMAGE_URL, DOUBLES, GACHA_TYPES, PRYDWEN_CHAR, PRYDWEN_LC, SPECIALS
+from .const import LOST, SIZE, WIKI_URL, IMAGE_URL, GACHA_TYPES, PRYDWEN_CHAR, PRYDWEN_LC, SPECIALS, COUNT_4_S_C
 from .serializers import *
 import time
 from urllib.parse import urlparse, urlunparse, urlencode, parse_qs
@@ -10,73 +10,211 @@ from django.core.files.images import ImageFile
 import requests
 from datetime import datetime
 from io import BytesIO
-from collections import Counter
 from .models import Warp as W
-from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Avg, Sum
 import pandas as pd
 import numpy as np
 
 class WarpAnalyser():
-    @staticmethod
-    def warps_per_type():
-        all_warps = W.objects.all().select_related('item_id', 'gacha_id').order_by('warp_id').values('warp_id', 'pity', 'item_id__rarity', 'item_id__item_id', 'item_id__name', 'gacha_id__gacha_type', 'item_id__image')
-        df = pd.DataFrame(list(all_warps), index=all_warps.values_list('warp_id'))
-        df['item_id__image'] = df['item_id__image'].apply(lambda x: f'/media/{x}') 
+    def __init__(self, warps:list=None, index:list=None):
+        if warps is None or index is None:
+            pass
+        else:
+            self.df = pd.DataFrame(warps, index=index)
+            self.df['item_id__image'] = self.df['item_id__image'].apply(lambda x: f'/media/{x}')
+            self.data = {}
 
-        def process_banner(group: pd.DataFrame, g_id: GachaType):
-            five_stars: pd.DataFrame = group[group['item_id__rarity'] == 5].copy()
-            five_stars['is_loss'] = five_stars['item_id__item_id'].isin(LOST).astype(bool)
-            w_n_l = []
-            is_g = False
+            for g in GachaType.objects.all():
+                b_data = self.df[self.df['gacha_id__gacha_type'] == g.id]
+                self.data[g.gacha_type] = self.process_banner(b_data, g)
 
-            for _, row in five_stars.iterrows():
-                if not is_g:
-                    w_n_l.append(int(not row['is_loss']))
-                    if row['is_loss']:
-                        is_g = True
-                else:
-                    is_g = False
-            avg_ff = round(100 * np.mean(w_n_l), 2) if w_n_l else None
-            last_5s = five_stars.iloc[-1] if not five_stars.empty else None
-            if last_5s is not None:
-                pity = int(group[group['warp_id'] > last_5s['warp_id']].shape[0])
-                warranted = bool(last_5s['is_loss'])
+    def process_banner(self, group: pd.DataFrame, g_id: GachaType):
+        five_stars: pd.DataFrame = group[group['item_id__rarity'] == 5].copy()
+        five_stars['is_loss'] = five_stars['item_id__item_id'].isin(LOST).astype(bool)
+        w_n_l = []
+        is_g = False
+
+        for _, row in five_stars.iterrows():
+            if not is_g:
+                w_n_l.append(int(not row['is_loss']))
+                if row['is_loss']:
+                    is_g = True
             else:
-                pity = group.shape[0]
-                warranted = False
-            avg_pity = round(five_stars['pity'].median(), 1)
-            avg_pity = avg_pity if not np.isnan(avg_pity) else None
+                is_g = False
+        wr = np.mean(w_n_l) if w_n_l else 0.5 # asume 50/50 
+        last_5s = five_stars.iloc[-1] if not five_stars.empty else None
+        if last_5s is not None:
+            pity = int(group[group['warp_id'] > last_5s['warp_id']].shape[0])
+            warranted = bool(last_5s['is_loss'])
+        else:
+            pity = group.shape[0]
+            warranted = False
+        avg_pity = round(five_stars['pity'].median(), 1)
+        avg_pity = avg_pity if not np.isnan(avg_pity) else 75
 
-            return {
-                'name': g_id.name,
-                'pity': pity,
-                'gacha_type': g_id.gacha_type,
-                'warranted': warranted,
-                'wr': avg_ff,
-                'avg_pity': avg_pity,
-                'c': group.shape[0],
-                'id': g_id.id,
-                'last_win': last_5s.to_dict(),
-                'max_pity': g_id.max_pity,
-            }
-
-
-        types = []
-        for g in GachaType.objects.all():
-            b_data = df[df['gacha_id__gacha_type'] == g.id]
-            types.append(process_banner(b_data, g))
-        return types
+        return {
+            'name': g_id.name,
+            'limited': len(five_stars[five_stars['is_loss'] == False].value_counts()),
+            'pity': pity,
+            'gacha_type': g_id.gacha_type,
+            'warranted': warranted,
+            'wr': round(100 * wr, 2),
+            'avg_pity': round(avg_pity, 1),
+            'c': group.shape[0],
+            'id': g_id.id,
+            'last_win': last_5s.to_dict() if last_5s is not None else None,
+            'max_pity': g_id.max_pity,
+        }
     
-    @staticmethod
-    def details(id:int) -> dict:
+    def per_type(self):
+        return [v for _,v in self.data.items()]
+    
+    def update(self, warps:list, index:list):
+        self.__init__(warps, index)
+
+    def monte_carlo(self, targets: dict, available_pulls:int, collab:bool, fours:int):
         """
-        Returns a detailed info to an specified id
+        Approximates the results of 100000 pulling characters and lcs
 
         Params:
-            id(int): id of item
+            targets(dict): all infos including item and count
+            available_pulls(int): amount of pulls available (at the beginning)
+            collab(bool): based on collaboration data
+            fours(int): amount of 4 star characters at max eidola
         """
-        return ItemSerializer(Item.objects.get(item_id=id)).data
+        a = [key for key, value in targets.items() if value['copies'] < 1]
+        if len(a) > 1 or available_pulls == 0:
+            return None
+        if not collab:
+            start_pity = {
+                "character": {
+                    "pity_5": self.data[11]['pity'],
+                    "guranteed": self.data[11]['warranted']
+                }, "lightcone": {
+                    "pity_5": self.data[12]['pity'],
+                    "guranteed": self.data[12]['warranted']
+                }
+            }
+        else:
+            start_pity = {
+                "character": {
+                    "pity_5": self.data[21]['pity'],
+                    "guranteed": self.data[21]['warranted']
+                }, "lightcone": {
+                    "pity_5": self.data[22]['pity'],
+                    "guranteed": self.data[22]['warranted']
+                }
+            }
+
+        banner_config = {
+            "characters": {
+                'base_rate': 0.006,
+                'hard_pity': 90,
+                'featured_rate': 0.5,
+                'soft_pity_start': 74
+            },
+            "lightcones": {
+                'base_rate': 0.008,
+                'hard_pity': 80,
+                'featured_rate': 0.75,
+                'soft_pity_start': 66
+            }
+        }
+
+        OWNED_4STAR_RATE = fours / COUNT_4_S_C
+        BASE_4_RATE = 0.055
+        HARD_PITY_4 = 10
+
+        def five_star_rate(pity: int, config:dict):
+            if pity < config['soft_pity_start']:
+                return config['base_rate']
+            extra = (pity - config['soft_pity_start'] + 1) * 0.06
+            return min(config['base_rate']+extra, 1)
+        
+        def simulate_banner_pull(state:dict, config:dict):
+            state['pity_5'] += 1
+            state['pity_4'] += 1
+
+            refunds = 0
+            undying_starlight = 0
+            featured = False
+
+            rate_5 = five_star_rate(state['pity_5'], config)
+
+            got_5 = state['pity_5'] >= config['hard_pity'] or np.random.random() < rate_5
+
+            if got_5:
+                state['pity_5'] = 0
+                state['pity_4'] = 0
+
+                if state['guranteed'] or np.random.random() < config['featured_rate']:
+                    featured = True
+                    state['guranteed'] = False
+                else:
+                    state['guranteed'] = True
+                
+                if np.random.random() < 0.3: # approx
+                    refunds += 2
+                    undying_starlight += 40
+                return featured, refunds, undying_starlight
+        
+            got_4 = state['pity_4'] >= HARD_PITY_4 or np.random.random() < BASE_4_RATE
+
+            if got_4:
+                state['pity_4'] = 0
+                is_character = np.random.random() < 0.5
+                if is_character:
+                    if np.random.random() < OWNED_4STAR_RATE:
+                        refunds += 1
+                        undying_starlight += 20
+                    else:
+                        refunds += 0.4
+                        undying_starlight += 8
+            return featured, refunds, undying_starlight
+
+        def simulate_run():
+            pulls = float(available_pulls)
+            banner_states = {
+                "characters": {
+                    "pity_5": start_pity['character']['pity_5'],
+                    "pity_4": 0,
+                    "guranteed": start_pity['character']['guranteed']
+                },
+                "lightcones": {
+                    "pity_5": start_pity['lightcone']['pity_5'],
+                    "pity_4": 0,
+                    "guranteed": start_pity['lightcone']['guranteed']
+                }
+            }
+
+            obtained = {key: targets[key]['obtained'] for key in targets}
+            undying_starlight = 0
+            total_pulls = 0
+
+            while int(pulls) > 0:
+                remaining_targets = [key for key, value in targets.items() if obtained[key] < value['copies']]
+                if not remaining_targets:
+                    break
+                current_target = remaining_targets[0]
+                banner_type = targets[current_target]['banner']
+                featured, refunds, gained_undying_starlight = simulate_banner_pull(banner_states[banner_type], banner_config[banner_type])
+                pulls -= 1
+                pulls += refunds
+                total_pulls += 1
+                undying_starlight += gained_undying_starlight
+
+                if featured:
+                    obtained[current_target] += 1
+            result = {
+                **obtained,
+                "undying_starlight": undying_starlight,
+                "total_pulls": total_pulls,
+            }
+
+            return result
+        results = [simulate_run() for _ in range(10_000)]
+        df = pd.DataFrame(results)
+        return df
+
 class Warp():
     """
     Support Class for information obtained from HSR API

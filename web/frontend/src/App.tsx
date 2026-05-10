@@ -10,6 +10,7 @@ import Items from './pages/Items'
 import Footer from './components/Footer'
 import Details from './pages/Details'
 import DetailBanner from './pages/DetailBanner'
+import Calculator from './pages/Calculator'
 
 import './App.css'
 
@@ -27,6 +28,7 @@ function App() {
               <Route path='/items' element={<Items />} />
               <Route path='/details/:id' element={< Details />} />
               <Route path='/banner/:id' element={< DetailBanner />} />
+              <Route path='/calculator' element={< Calculator />} />
             </Routes>
           </main>
           <Footer />

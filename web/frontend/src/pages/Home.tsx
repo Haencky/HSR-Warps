@@ -7,6 +7,7 @@ function Home() {
     item_id__name: string;
   }
 
+  interface Stats {wr: number; prob: number;}
   interface Warp { id: number; item_name: string; uid: number; time: string; item_id: number; item_rarity: number; item_eng_name: string; pity: number; warp_id: number}
 
   interface DashboardType {
@@ -20,6 +21,7 @@ function Home() {
     max_pity: number;
     last_win: LastWin | null;
     avg_pity: number;
+    stats: Stats;
   }
 
   const [types, setTypes] = useState<DashboardType[]>([])
@@ -27,7 +29,7 @@ function Home() {
   const [stars, setStars] = useState<number[]>([4,5])
   const [searchTerm, setSearchTerm] = useState("")
   const [warps, setWarps] = useState<Warp[]>([])
-  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState(false)
   const VITE_API_URL = window._env_.BACKEND_URL
 
   useEffect(() => {
@@ -67,9 +69,7 @@ function Home() {
         selectedId 
           ? "grid grid-cols-1 lg:grid-cols-[450px_1fr] gap-8 items-start" 
           : "flex flex-wrap gap-8 justify-center"
-      }`}>
-        
-
+      }`}>        
         <div className={`flex flex-wrap gap-8 ${selectedId ? "flex-col w-full" : "justify-center"}`}>
           {types.map((t) => (
             <div 
