@@ -35,5 +35,5 @@ urlpatterns = [
     path('api/banner/<int:id>', detail_banner_api),
     path('api/update', update_image_api),
     path('api/detail-types/<int:gacha_id>', detail_type_api),
-    path('test', test),
+    path('api/calculator', api_calc_possibilities),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
