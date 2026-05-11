@@ -14,7 +14,10 @@ from .utils import WarpAnalyser, fetch_info, check_banner, getLCs, getSpecials, 
 from .serializers import *
 
 types = [1, 2, 11, 12, 21, 22]
-w = WarpAnalyser()
+
+def get_analyser() -> WarpAnalyser:
+    warps = all_warps = Warp.objects.all().select_related('item_id', 'gacha_id').order_by('warp_id').values('warp_id', 'pity', 'item_id__rarity', 'item_id__item_id', 'item_id__name', 'gacha_id__gacha_type', 'item_id__image')
+    return WarpAnalyser(list(warps), all_warps.values_list('warp_id'))
 
 def get_suggestion(input:str, correct:list, max_distance=3, top_n=5):
     distances = []
@@ -27,9 +30,7 @@ def get_suggestion(input:str, correct:list, max_distance=3, top_n=5):
 # Create your views here.
 @api_view(['GET'])
 def index_api(request):
-    warps = all_warps = Warp.objects.all().select_related('item_id', 'gacha_id').order_by('warp_id').values('warp_id', 'pity', 'item_id__rarity', 'item_id__item_id', 'item_id__name', 'gacha_id__gacha_type', 'item_id__image')
-    w.update(list(warps), all_warps.values_list('warp_id'))
-    return Response(w.per_type())
+    return Response(get_analyser().per_type())
 
 @api_view(['GET'])
 def detail_type_api(request, gacha_id:int):
@@ -150,17 +151,15 @@ def api_calc_possibilities(request):
         pulls = request.data.get('pulls')
         characters = request.data.get('characters')
         lightcones = request.data.get('lightcones')
-        #c = request.data.get('character_id')
-        #l = request.data.get('lightcone_id')
-        c = 1506
-        l = 2
+        c = request.data.get('character_id')
+        l = request.data.get('lightcone_id')
     except:
         pulls = 0
         characters = 0
         lightcones = 0
         c = 1
         l = 2
-    stats = w.monte_carlo(
+    stats = get_analyser().monte_carlo(
         {
             c:
                 {'copies': characters, 'banner': 'characters', 'obtained': Warp.objects.filter(item_id__item_id=c).count()},
@@ -178,7 +177,9 @@ def api_calc_possibilities(request):
         prob_c = (char_data >= characters).sum() / len(stats)
         prob_lc = (lc_data >= lightcones).sum() / len(stats)
         prob = prob_c * prob_lc
+        starlight = stats['undying_starlight'].mean()
+        total_pulls = stats['total_pulls'].mean()
     else:
-        prob = 0
+        prob = starlight = total_pulls = 0
 
-    return Response({'percent': prob, 'starlight': stats['undying_starlight'].mean(), 'total_pulls': stats['total_pulls'].mean()})
+    return Response({'percent': prob, 'starlight': starlight, 'total_pulls': total_pulls})

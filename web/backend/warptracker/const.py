@@ -7,6 +7,7 @@ IMAGE_URL = 'https://raw.githubusercontent.com/Mar-7th/StarRailRes/master/'
 ITEM_ID_URL = 'https://raw.githubusercontent.com/Haencky/HSR-Warps/main/itemIDs.json'
 SPECIALS = 'https://raw.githubusercontent.com/Haencky/HSR-Warps/main/special.json'
 SIZE = 10000
+COUNT_4_S_C = 23 # 23 4 star characters
 
 GACHA_TYPES = {
     "de-de": {

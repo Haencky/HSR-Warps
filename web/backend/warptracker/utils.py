@@ -16,16 +16,13 @@ import numpy as np
 
 class WarpAnalyser():
     def __init__(self, warps:list=None, index:list=None):
-        if warps is None or index is None:
-            pass
-        else:
-            self.df = pd.DataFrame(warps, index=index)
-            self.df['item_id__image'] = self.df['item_id__image'].apply(lambda x: f'/media/{x}')
-            self.data = {}
+        self.df = pd.DataFrame(warps, index=index)
+        self.df['item_id__image'] = self.df['item_id__image'].apply(lambda x: f'/media/{x}')
+        self.data = {}
 
-            for g in GachaType.objects.all():
-                b_data = self.df[self.df['gacha_id__gacha_type'] == g.id]
-                self.data[g.gacha_type] = self.process_banner(b_data, g)
+        for g in GachaType.objects.all():
+            b_data = self.df[self.df['gacha_id__gacha_type'] == g.id]
+            self.data[g.gacha_type] = self.process_banner(b_data, g)
 
     def process_banner(self, group: pd.DataFrame, g_id: GachaType):
         five_stars: pd.DataFrame = group[group['item_id__rarity'] == 5].copy()
@@ -68,9 +65,6 @@ class WarpAnalyser():
     def per_type(self):
         return [v for _,v in self.data.items()]
     
-    def update(self, warps:list, index:list):
-        self.__init__(warps, index)
-
     def monte_carlo(self, targets: dict, available_pulls:int, collab:bool, fours:int):
         """
         Approximates the results of 100000 pulling characters and lcs
