@@ -2,7 +2,17 @@ name: Publish HSR Warptracker
 
 on:
   push:
-    branches: [ "dev" ]
+    branches: [ "main" ]
+    paths: 
+      - 'web/backend/**'
+      - 'web/frontend/**'
+      - '.github/workflows/**'
+
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'web/backend/**'
+      - 'web/frontend/**'
 
 jobs:
   backend-tests:
@@ -21,6 +31,7 @@ jobs:
         run: python web/backend/manage.py test
 
   build-and-push:
+    if: github.event_name == 'push'
     needs: backend-tests
     runs-on: ubuntu-latest
     steps:
@@ -42,15 +53,15 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: web/backend
-          file: Dockerfile
+          file: web/backend/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: haenck/hsr-warptracker-backend
+          tags: haenck/hsr-warptracker-backend:latest
       - name: Build and push frontend
         uses: docker/build-push-action@v5
         with:
           context: web/frontend
-          file: Dockerfile
+          file: web/frontend/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: haenck/hsr-warptracker-frontend
+          tags: haenck/hsr-warptracker-frontend:latest
