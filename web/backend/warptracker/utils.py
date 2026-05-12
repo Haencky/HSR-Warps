@@ -529,7 +529,7 @@ def fetch_info(url:str, gacha_type: int, lc_data: dict, special_data: dict) -> d
         current_pity = last_warp.pity if last_warp else 0
         try:
             warps = requests.get(url).json()['data']['list'] # request all warps
-        except requests.RequestException, TypeError:
+        except (requests.RequestException, TypeError):
             warps = None
         if warps:
             l = W.objects.filter(uid=warps[0]['uid'], gacha_id__gacha_type__gacha_type=gacha_type).values_list('warp_id', flat=True)
