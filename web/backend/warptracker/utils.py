@@ -37,7 +37,13 @@ class WarpAnalyser():
                     is_g = True
             else:
                 is_g = False
-        wr = np.mean(w_n_l) if w_n_l else 0.5 # asume 50/50 
+        wr = np.mean(w_n_l) if w_n_l else 0.5 # asume 50/50
+        if g_id.gacha_type == 1 or g_id.gacha_type == 2:
+            wins = five_stars
+        else:
+            wins = five_stars[five_stars['is_loss'] == False] if not five_stars.empty else None
+        if wins is not None and not wins.empty:
+            last_win = wins.iloc[-1]
         last_5s = five_stars.iloc[-1] if not five_stars.empty else None
         if last_5s is not None:
             pity = int(group[group['warp_id'] > last_5s['warp_id']].shape[0])
@@ -45,7 +51,7 @@ class WarpAnalyser():
         else:
             pity = group.shape[0]
             warranted = False
-        avg_pity = round(five_stars['pity'].median(), 1)
+        avg_pity = five_stars['pity'].median()
         avg_pity = avg_pity if not np.isnan(avg_pity) else 75
 
         return {
@@ -58,7 +64,7 @@ class WarpAnalyser():
             'avg_pity': round(avg_pity, 1),
             'c': group.shape[0],
             'id': g_id.id,
-            'last_win': last_5s.to_dict() if last_5s is not None else None,
+            'last_win': last_win.to_dict() if last_5s is not None else None,
             'max_pity': g_id.max_pity,
         }
     

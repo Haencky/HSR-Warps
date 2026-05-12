@@ -141,6 +141,7 @@ LOST = [
     23002, # Something Irreplaceable
     23003, # But the Battle Isn't Over
     23004, # In the Name of the World
+    23005, # Moment of Victory
     23012, # Sleep Like the Dead
     23013, # Time Waits for No One
 ]
