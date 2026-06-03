@@ -10,7 +10,7 @@ from io import BytesIO
 from django.core.files.images import ImageFile
 import requests
 from django.contrib import messages
-from .utils import WarpAnalyser, fetch_info, check_banner, getLCs, getSpecials, update_all
+from .utils import WarpAnalyser, fetch_info, check_banner, update_all, getData
 from .serializers import *
 
 types = [1, 2, 11, 12, 21, 22]
@@ -52,10 +52,8 @@ def add_pulls_api(request):
             {'error': 'No URL provided'},
             status=status.HTTP_400_BAD_REQUEST
         )
-    
-    lcs = getLCs()
-    specials = getSpecials()
-    added = {t: fetch_info(url, t, lcs, special_data=specials) for t in types}
+    data_fribbles = getData()
+    added = {t: fetch_info(url, t, data_fribbles=data_fribbles) for t in types}
     print(added)
     results = [{'name': str(GachaType.objects.filter(gacha_type=t).values_list('name', flat=True)[0]), 'count': added[t]} for t in types if added[t] > 0]
     check_banner()
@@ -183,3 +181,10 @@ def api_calc_possibilities(request):
         prob = starlight = total_pulls = 0
 
     return Response({'percent': prob, 'starlight': starlight, 'total_pulls': total_pulls})
+
+@api_view(['PATCH', 'POST'])
+def api_update_banner(request, banner_id:int):
+    """
+    Updates a banner (replaces link to admin site)
+    """
+    b = Banner.objects.get(pk=banner_id)

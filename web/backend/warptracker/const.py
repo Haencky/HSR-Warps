@@ -1,6 +1,7 @@
 import os
 
 WIKI_URL = 'https://honkai-star-rail.fandom.com/wiki/'
+FRIBBLES_DATA = 'https://raw.githubusercontent.com/fribbels/hsr-optimizer/refs/heads/main/src/data/game_data.json'
 PRYDWEN_CHAR = 'https://www.prydwen.gg/page-data/star-rail/characters/'
 PRYDWEN_LC = 'https://www.prydwen.gg/page-data/star-rail/light-cones/page-data.json'
 IMAGE_URL = 'https://raw.githubusercontent.com/Mar-7th/StarRailRes/master/'

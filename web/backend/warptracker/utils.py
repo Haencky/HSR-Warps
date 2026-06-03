@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Haencky
 # SPDX-License-Identifier: GPL-3.0-or-later
 from .models import Path, Item, ItemType, GachaType, Banner
-from .const import LOST, SIZE, WIKI_URL, IMAGE_URL, GACHA_TYPES, PRYDWEN_CHAR, PRYDWEN_LC, SPECIALS, COUNT_4_S_C
+from .const import LOST, SIZE, WIKI_URL, IMAGE_URL, GACHA_TYPES, SPECIALS, COUNT_4_S_C, FRIBBLES_DATA
 from .serializers import *
 import time
 from urllib.parse import urlparse, urlunparse, urlencode, parse_qs
@@ -281,40 +281,23 @@ def getSpecials():
         print('invalid status code for specials')
         return None
 
-def getLCs ():
+def getData() -> dict:
     """
-    Fetches all light cones and returns their dictionary
+    Fetches all data from fribbles data.json
     """
     try:
-        r = requests.get(PRYDWEN_LC)
+        r = requests.get(FRIBBLES_DATA)
     except requests.RequestException:
-        print('Could not connect to LCs')
+        print('Could not fetch fribbles data')
         return None
     if r.status_code == 200:
-        data = r.json()['result']['data']['allCharacters']['nodes']
+        data = r.json()
         return data
     else:
         print("Invalid status code")
         return None
 
-def getLCPath(name: str, data:dict):
-    """
-    Returns the path of a Light Cone
-
-    Params:
-        name(str): name of light cone
-        data(dict): dictionary of all light cones
-    
-    Returns:
-        path(str): name of Path
-    """
-    
-    for lc in data:
-        if lc['name'].lower() == name.lower():
-            path = lc['path']
-            return path
-
-def fetch_info(url:str, gacha_type: int, lc_data: dict, special_data: dict) -> dict:
+def fetch_info(url:str, gacha_type: int, data_fribbles: dict) -> dict:
     """
     Fetches info from HSR Api
 
@@ -412,18 +395,11 @@ def fetch_info(url:str, gacha_type: int, lc_data: dict, special_data: dict) -> d
 
             if type == 'Light Cone':
                 #img_name = 'light_cones/'
-                path = getLCPath(name, lc_data)
+                path = data_fribbles['lightCones'][id]['path']
                 img_link = IMAGE_URL + 'image/light_cone_'
             else:
                 #img_name = 'characters/'
-                try:
-                    if name in special_data:
-                        name = special_data[name]
-                    r = requests.get(f'{PRYDWEN_CHAR}{name.replace(' ', '-').lower()}/page-data.json')
-                except requests.RequestException:
-                    print(f'Error fetching data for {name}')
-                if r.status_code == 200:
-                    path = r.json()['result']['data']['currentUnit']['nodes'][0]['path']
+                path = data_fribbles['characters'][id]['path']
                 img_link = IMAGE_URL + 'image/character_'
             
             # download image
@@ -535,7 +511,7 @@ def fetch_info(url:str, gacha_type: int, lc_data: dict, special_data: dict) -> d
             l = W.objects.filter(uid=warps[0]['uid'], gacha_id__gacha_type__gacha_type=gacha_type).values_list('warp_id', flat=True)
             last = list(l)
             for warp in warps[::-1]:
-                if int(warp['id']) in last: # break loop if nothing new is added
+                if int(warp['id']) in last:
                     continue
                 item_id = int(warp['item_id'])
                 w = Warp(
