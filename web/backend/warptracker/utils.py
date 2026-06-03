@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Haencky
 # SPDX-License-Identifier: GPL-3.0-or-later
 from .models import Path, Item, ItemType, GachaType, Banner
-from .const import LOST, SIZE, WIKI_URL, IMAGE_URL, GACHA_TYPES, SPECIALS, COUNT_4_S_C, FRIBBLES_DATA
+from .const import LOST, SIZE, WIKI_URL, IMAGE_URL, GACHA_TYPES, SPECIALS, COUNT_4_S_C, FRIBBELS_DATA
 from .serializers import *
 import time
 from urllib.parse import urlparse, urlunparse, urlencode, parse_qs
@@ -286,7 +286,7 @@ def getData() -> dict:
     Fetches all data from fribbles data.json
     """
     try:
-        r = requests.get(FRIBBLES_DATA)
+        r = requests.get(FRIBBELS_DATA)
     except requests.RequestException:
         print('Could not fetch fribbles data')
         return None

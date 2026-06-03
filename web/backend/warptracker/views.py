@@ -52,8 +52,8 @@ def add_pulls_api(request):
             {'error': 'No URL provided'},
             status=status.HTTP_400_BAD_REQUEST
         )
-    data_fribbles = getData()
-    added = {t: fetch_info(url, t, data_fribbles=data_fribbles) for t in types}
+    data = getData()
+    added = {t: fetch_info(url, t, data) for t in types}
     print(added)
     results = [{'name': str(GachaType.objects.filter(gacha_type=t).values_list('name', flat=True)[0]), 'count': added[t]} for t in types if added[t] > 0]
     check_banner()
