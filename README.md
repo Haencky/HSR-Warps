@@ -1,64 +1,158 @@
 # HSR Warptracker
-Django and React (Vite) based Gacha-Tracker for Honkai Starrail
+
+A Django + React (Vite) based gacha tracker for **Honkai: Star Rail**.
+
+Track your pulls, pity, banners, owned characters/light cones and more — all in a clean self-hosted web interface.
 
 ---
-**Quick Links:**
-- [GitHub Repository](https://github.com/Haencky/HSR-Warps)
-- [Dockerhub-Frontend](https://hub.docker.com/repository/docker/haenck/hsr-warptracker-frontend), [Dockerhub-Backend](https://hub.docker.com/repository/docker/haenck/hsr-warptracker-backend)
----
 
-|**Service**|**Port**|**Most likely URL**|
+## Default Services
+
+| Service | Port | URL |
 |---|---|---|
-|Frontend| 5173|http://localhost:5173|
-|Backend (API)|8000|http://localhost:8000|
+| Frontend | `5173` | http://localhost:5173 |
+| Backend API | `8000` | http://localhost:8000 |
 
-## Get your containers up and running!
+---
+
+# 🚀 Installation
+
 > [!TIP]
-> If you just want to run this on your PC and some technical terms confuse you just hit enter (default values in [] are set). This works just fine. <br>
-> Only make sure to set your path to media and db file correct (per default the files will be created/selected in your current directory) <br>
-> 
+> If you just want to run this locally and some technical terms confuse you:
+>
+> Just press `ENTER` to use the default values shown in `[]`.
+>
+> The defaults work perfectly fine for most users.
+>
+> Only make sure your paths for:
+> - the database file
+> - the media folder
+>
+> are set correctly.
+>
+> By default they will be created in your current directory.
+
+## Quick Install
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/Haencky/HSR-Warps/refs/heads/main/install.sh -o install.sh && chmod +x install.sh && ./install.sh
 ```
-## Info
-> [!TIP]
-> Keep an eye on the [announcements](https://github.com/Haencky/HSR-Warps/discussions/categories/announcements)! <br>
-> New features, updates and bugfixes will be diplayed there.
-
-## Coordination
-- `Jade-Image`: Home screen displaying current pity and more
-- `Search-Bar`: Search for items in your language or english (**only items added in db will be displayed**)
-- `🎫`: Paste your URL here (pasted to your clipboard after runnring the command in powershell
-- `➕`: Enter the english name of an item you want to add manually
-- `🚩`: Dislays your banners
-  - By default only banner where you obtained an item will display an item
-  - Borders: green (obtained) / red (not obtained)
-  - On Hover: count of pulls (green: only limited 5 star item / red: at least one not limited item)
-- `🎁`: Display items grouped by paths
-- `⚙️`: Link to admin site
-- Footer:
-  - `Github`: Link to this repo
-  - `Dockerhub`: Link to backend docker image
-  - `Item IDs`: Link to a list of all items matching their id
- ---
-
-## ⚖️ License & Disclaimer
-
-This project is licensed under the **GNU General Public License v3.0**. See the `LICENSE` file for details.
-
-- **Open Source**: You are free to use, modify, and redistribute this software under the same license.
-- **Disclaimer**: This is a fan-made project and is **not** affiliated with or endorsed by HoYoverse (miHoYo). All game-related assets, characters, and names are the property of their respective owners.
-- **No Warranty**: This software is provided "as is" without any guarantees. Use it at your own risk.
 
 ---
-## 📦 External Assets & Data
 
-This application does not bundle game assets or third-party data to keep the footprint small and respect copyright. Instead, it downloads them upon first request:
+# 🔄 Updating Docker Compose Containers
 
-- **Images & Icons**: Character and item graphics are downloaded from the **[Mar-7th/StarRailRes](https://github.com/Mar-7th/StarRailRes)** repository and stored locally in the `/media` folder.
--   **Game Information**: Character and light cone details are fetched dynamically from **[prydwen.gg](https://www.prydwen.gg/star-rail/)**.
+To update the application to the newest version:
+## 1. Open your Terminal
+```bash
+cd /your/path/to/docker-compose.yml
+```
+or open your terminal from file explorer
 
-**Note on Local Storage:** Once downloaded, assets are kept locally to reduce bandwidth for both the user and the host providers. These files remain the intellectual property of **HoYoverse** or the respective contributors.
+## 2. Pull the newest images
+
+```bash
+docker compose pull
+```
+
+## 3. Recreate the containers
+
+```bash
+docker compose up -d
+```
+
+## 4. Migrate the database
+```bash
+docker exec -it hsr-backend python manage.py migrate
+```
+
+This will:
+- download the newest frontend/backend images
+- recreate the containers
+- keep your mounted database/media files intact
+- migrate the database if necessary
+
+---
+
+# ℹ️ Information
+
+> [!TIP]
+> Keep an eye on the announcements section:
+>
+> https://github.com/Haencky/HSR-Warps/discussions/categories/announcements
+>
+> New features, updates and bugfixes will be posted there.
+
+---
+
+
+# ⚖️ License & Disclaimer
+
+This project is licensed under the **GNU General Public License v3.0**.
+
+See the `LICENSE` file for details.
+
+## Open Source
+
+You are free to:
+- use
+- modify
+- redistribute
+
+this software under the same license.
+
+## Disclaimer
+
+This is a fan-made project and is **not affiliated with or endorsed by HoYoverse (miHoYo)**.
+
+All game-related assets, characters and names belong to their respective owners.
+
+## No Warranty
+
+This software is provided **"as is"** without any guarantees.
+
+Use it at your own risk.
+
+---
+
+# 📦 External Assets & Data
+
+This application does not bundle game assets or third-party data in order to:
+- reduce repository size
+- reduce Docker image size
+- respect copyright
+
+Assets are downloaded dynamically on first use.
+
+## Sources
+
+### Images & Icons
+
+Character and item assets are downloaded from:
+
+https://github.com/Mar-7th/StarRailRes
+
+Downloaded files are stored locally in the `/media` folder.
+
+### Game Information
+
+Character and Light Cone information is fetched dynamically from:
+
+https://www.prydwen.gg/star-rail/
+
+---
+
+## Local Storage Notice
+
+Once downloaded, assets remain stored locally to:
+- reduce bandwidth usage
+- improve loading times
+- avoid repeated downloads
+
+All assets remain the intellectual property of:
+- HoYoverse
+- or the respective contributors/owners
+
+---
 
 Copyright (c) 2026 Haencky
