@@ -507,7 +507,7 @@ def fetch_info(url:str, gacha_type: int, data_fribbels: dict) -> dict:
         try:
             all_warps = requests.get(url).json()['data']['list'] # request all warps
             if all_warps:
-                latest = W.objects.filter(uid=all_warps[0]['uid'], gacha_id__gacha_type__gacha_type=gacha_type).latest('warp_id')
+                latest = W.objects.filter(uid=all_warps[0]['uid'], gacha_id__gacha_type__gacha_type=gacha_type).order_by('-warp_id').latest('warp_id')
                 warps = []
                 for warp in all_warps:
                     if int(warp['id']) > latest.warp_id:
@@ -517,7 +517,6 @@ def fetch_info(url:str, gacha_type: int, data_fribbels: dict) -> dict:
         except (requests.RequestException, TypeError):
             warps = None
         if warps:
-            print(len(warps))
             for warp in warps[::-1]:
                 item_id = int(warp['item_id'])
                 w = Warp(
@@ -537,9 +536,9 @@ def fetch_info(url:str, gacha_type: int, data_fribbels: dict) -> dict:
 
                 if not _check_item(item_id):
                     create_item(w)
-                    if _add_warp(w, current_pity): # returns True if last pull was a 5 star
-                        current_pity = 0
-                    current_pity+=1
+                if _add_warp(w, current_pity): # returns True if last pull was a 5 star
+                    current_pity = 0
+                current_pity+=1
                 time.sleep(0.1)
             return len(warps)
         else:
