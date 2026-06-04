@@ -292,12 +292,20 @@ def getData() -> dict:
         return None
     if r.status_code == 200:
         data = r.json()
-        return data
+        flat_data = {
+            item_key: item_data
+            for category_dict in data.values()
+            if isinstance(category_dict, dict)
+            for item_key, item_data in category_dict.items()
+            if item_key.isnumeric()
+        }
+        return flat_data
+        
     else:
         print("Invalid status code")
         return None
 
-def fetch_info(url:str, gacha_type: int, data_fribbles: dict) -> dict:
+def fetch_info(url:str, gacha_type: int, data_fribbels: dict) -> dict:
     """
     Fetches info from HSR Api
 
@@ -395,11 +403,11 @@ def fetch_info(url:str, gacha_type: int, data_fribbles: dict) -> dict:
 
             if type == 'Light Cone':
                 #img_name = 'light_cones/'
-                path = data_fribbles['lightCones'][id]['path']
+                path = data_fribbels[id]['path']
                 img_link = IMAGE_URL + 'image/light_cone_'
             else:
                 #img_name = 'characters/'
-                path = data_fribbles['characters'][id]['path']
+                path = data_fribbels[id]['path']
                 img_link = IMAGE_URL + 'image/character_'
             
             # download image
@@ -473,17 +481,10 @@ def fetch_info(url:str, gacha_type: int, data_fribbles: dict) -> dict:
         Returns:
             mapping(dict): a dictionary mapping item ids to engllish names and types
         """
-        parsed = urlparse(url)
-        query_dict = parse_qs(parsed.query)
-        query_dict['lang'] = ['en'] # set language to english
-        new_query = urlencode(query_dict, doseq=True)
-        url = urlunparse(parsed._replace(query=new_query))
-
-        warps = requests.get(url).json()['data']['list'] # request all warps
 
         items = []
-        for warp in warps:
-            items.append(_Item(int(warp['item_id']), warp['name'], warp['item_type']))
+        for item in list(data_fribbels.keys()):
+            items.append(_Item(int(item), data_fribbels[item]['name'], 'Light Cone' if int(item) >= 20_000 else 'Character'))
 
         _items = list(set(items))
         return {item.id: {'name': item.name, 'type': item.type} for item in _items}
