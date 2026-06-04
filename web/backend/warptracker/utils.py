@@ -502,18 +502,23 @@ def fetch_info(url:str, gacha_type: int, data_fribbels: dict) -> dict:
         Params:
             urL(str): url to HSR Api
         """
-        counter = 0
         current_pity = last_warp.pity if last_warp else 0
+        warps = None
         try:
-            warps = requests.get(url).json()['data']['list'] # request all warps
+            all_warps = requests.get(url).json()['data']['list'] # request all warps
+            if all_warps:
+                latest = W.objects.filter(uid=all_warps[0]['uid'], gacha_id__gacha_type__gacha_type=gacha_type).latest('warp_id')
+                warps = []
+                for warp in all_warps:
+                    if int(warp['id']) > latest.warp_id:
+                        warps.append(warp)
+                    else:
+                        break
         except (requests.RequestException, TypeError):
             warps = None
         if warps:
-            l = W.objects.filter(uid=warps[0]['uid'], gacha_id__gacha_type__gacha_type=gacha_type).values_list('warp_id', flat=True)
-            last = list(l)
+            print(len(warps))
             for warp in warps[::-1]:
-                if int(warp['id']) in last:
-                    continue
                 item_id = int(warp['item_id'])
                 w = Warp(
                     item_id=warp['item_id'],
@@ -532,14 +537,11 @@ def fetch_info(url:str, gacha_type: int, data_fribbels: dict) -> dict:
 
                 if not _check_item(item_id):
                     create_item(w)
-                
-                if int(w.id) not in last:
-                    counter += 1
                     if _add_warp(w, current_pity): # returns True if last pull was a 5 star
                         current_pity = 0
                     current_pity+=1
                 time.sleep(0.1)
-            return counter
+            return len(warps)
         else:
             return 0
     fetched = _fetch(url)
