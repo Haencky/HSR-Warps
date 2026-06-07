@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view
 from django.db.models import F, Max, Q, Count
 from rest_framework.response import Response
 from rest_framework import status
-from .const import LOST, ITEM_ID_URL, IMAGE_URL, WIKI_URL, DOUBLES
+from .const import LOST, IMAGE_URL, WIKI_URL, LIGHTCONE_NAMES
 from Levenshtein import distance
 from io import BytesIO
 from django.core.files.images import ImageFile
@@ -64,36 +64,65 @@ def add_pulls_api(request):
 
 @api_view(['POST'])
 def add_items_manual_api(request):
-    name:str = request.data.get('eng_name')
-    suggestions = []
-    item_id = 0
-    msg = ""
+    items = getData()
+    item_id:int = int(request.data.get('item_id'))
+    if Item.objects.filter(item_id=item_id).exists():
+        return Response({'message': f'Item {item_id} already exists in the database.'})
     try:
-        ids = requests.get(ITEM_ID_URL).json()
-        wanted = ids[name]
-        item_id = wanted
-        img_url = f'{IMAGE_URL}image/{"character_" if item_id < 20_000 else "light_cone_"}portrait/{item_id}.png'
-        img_name = f'{name}.png'
-        fetch_img = requests.get(img_url) # fetch image
-        image_bytes = BytesIO(fetch_img.content) # save to byte stream
-        django_file = ImageFile(image_bytes, name=img_name)
-        wiki = WIKI_URL + name.replace(' ', '_')
-        if item_id in DOUBLES: wiki += '_(Light_Cone)'
-        rarity = 5
-        Item.objects.create(
-            item_id = item_id,
-            eng_name = name,
-            name = name,
-            wiki = wiki,
-            image = django_file,
-            rarity = rarity
-        )
-    except requests.RequestException:
-        messages.error(request, 'Error loading Item IDs Json File')
+       item = items[f'{item_id}']
     except KeyError:
-        suggestions = get_suggestion(name, list(ids.keys()))
-        msg = f"Could not find '{name}'"
-    return Response({'message': msg if msg else f'Added item {name}','id': item_id, 'suggestions': suggestions})
+        print(f'Could not find item {item_id}.')
+        return Response({'message': f'Could not find item {item_id}.'})
+    name = item['name']
+    rarity = item['rarity']
+    path_name = item['path'] if item['path'] != 'Hunt' else f'The Hunt'
+    path, created = Path.objects.get_or_create(name=path_name)
+
+    if created:
+        try:
+            r = requests.get(f'{IMAGE_URL}icon/path/{item['path']}.png')
+            if r.status_code == 200:
+                path_bytes = BytesIO(r.content)
+                path_file = ImageFile(path_bytes, name=path_name)
+                path.icon.save(path_name, path_file, save=True)
+            else:
+                print(f'Error loading path icon: {r.status_code}.')
+                path.delete()
+                return Response({'message': f'Could not fetch icon for path {path_name}'})
+        except requests.RequestException as e:
+            print(f'Error loading path icon: {e}')
+            path.delete()
+            return Response({'message': f'Could not fetch icon for path {path_name}'})
+    img_url = f'{IMAGE_URL}image/{"character_" if item_id < 20_000 else "light_cone_"}portrait/{item_id}.png'
+    img_name = f'{name}.png'
+    try:
+        fetch_img = requests.get(img_url) # fetch image
+        if fetch_img.status_code == 200:
+
+            image_bytes = BytesIO(fetch_img.content) # save to byte stream
+            django_file = ImageFile(image_bytes, name=img_name)
+        else:
+            return Response({'message': f'Error loading image for {name}'})
+    except requests.RequestException:
+        return Response({'message': f'Error loading image for {name}'})
+    wiki = WIKI_URL + name.replace(' ', '_')
+    if item_id < 20_000: # character
+        typ = ItemType.objects.exclude(name__in=LIGHTCONE_NAMES).first() # get character type reference
+    else:
+        typ = ItemType.objects.filter(name__in=LIGHTCONE_NAMES).first() # get lightcone type reference
+    if not typ:
+        return Response({'Run a normal import first to create itemtypes in your database.'})
+    Item.objects.create(
+        item_id = item_id,
+        eng_name = name,
+        name = name,
+        wiki = wiki,
+        image = django_file,
+        rarity = rarity,
+        path=path,
+        typ=typ
+    )
+    return Response({'message': f'Created item {name} in database.'})
 
 @api_view(['GET'])
 def detail_item_api(request, id:int):
