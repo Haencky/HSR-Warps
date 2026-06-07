@@ -156,19 +156,33 @@ def path_api(request):
 
 @api_view(['GET', 'PATCH'])
 def detail_banner_api(request, id:int):
-    b = BannerSerializer(Banner.objects.get(id=id)).data
-    b_data = Warp.objects.filter(gacha_id=id)
-    warps = WarpSerializer(b_data.annotate(rarity=F('item_id__rarity')), many=True).data
-    items = b_data.values('item_id').annotate(count=Count('item_id'), name=F('item_id__name'), image=F('item_id__image'), rarity=F('item_id__rarity'))
-    types = b_data.values('item_id__typ').annotate(count=Count('item_id__typ'), name=F('item_id__typ__name'))
-    rarities = b_data.values('item_id__rarity').annotate(count=Count('item_id__rarity'))
-    return Response({
-        'b': b,
-        'warps': warps,
-        'items': items,
-        'types': types,
-        'rarities': rarities
-    })
+    if request.method == 'PATCH':
+        banner_obj = Banner.objects.get(id=id)
+        item_id = request.data.get('item_id')
+        if item_id is not None:
+            item_id = int(item_id)
+            if not Item.objects.filter(item_id=item_id).exists():
+                result = create_item_manually(item_id)
+                if not result['success']:
+                    return Response({'error': result['message']}, status=status.HTTP_400_BAD_REQUEST)
+
+        banner_obj.item_id_id = item_id
+        banner_obj.save()
+        return Response({'message': 'Banner updated successfully'}, status=status.HTTP_200_OK)
+    else:
+        b = BannerSerializer(Banner.objects.get(id=id)).data
+        b_data = Warp.objects.filter(gacha_id=id)
+        warps = WarpSerializer(b_data.annotate(rarity=F('item_id__rarity')), many=True).data
+        items = b_data.values('item_id').annotate(count=Count('item_id'), name=F('item_id__name'), image=F('item_id__image'), rarity=F('item_id__rarity'))
+        types = b_data.values('item_id__typ').annotate(count=Count('item_id__typ'), name=F('item_id__typ__name'))
+        rarities = b_data.values('item_id__rarity').annotate(count=Count('item_id__rarity'))
+        return Response({
+            'b': b,
+            'warps': warps,
+            'items': items,
+            'types': types,
+            'rarities': rarities
+        })
 
 @api_view(['GET'])
 def update_image_api(request):

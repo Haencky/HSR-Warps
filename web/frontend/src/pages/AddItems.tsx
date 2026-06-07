@@ -33,7 +33,7 @@ function AddItems() {
                 
                 setItems(itemList);
             })
-            .catch(err => console.error("Fehler beim Laden der Spieldaten:", err));
+            .catch(err => console.error("Error loading data:", err));
     }, []);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

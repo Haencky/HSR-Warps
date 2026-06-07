@@ -3,10 +3,12 @@ import { useParams, Link } from "react-router-dom";
 import { BarChart, Bar, YAxis, XAxis, Tooltip, ResponsiveContainer } from "recharts";
 import specialpass from '../assets/specialpass.png'
 import jade from '../assets/jade.png'
+import BannerEditModal from "../modals/EditBanner";
 
 function DetailBanner () {
    interface Warp { id: number; item_name: string; item_image: string; uid: number; time: string; item_id: number; item_rarity: number; warp_id: number;}
    interface Item { item_id: number; count: number; name: string; image: string; rarity: number; }
+   interface FribbelsItem {id: number; name: string; rarity: number;}
    interface Type { name: string; item_id__typ: number; count: number; }
    interface Rarity { item_id__rarity: number; count: number; }
    interface Banner { id: number; gacha_id: number; gacha_type: number; item_id: number | null; item_image: string | null; item_name: string | null; }
@@ -14,11 +16,14 @@ function DetailBanner () {
    const [banner, setBanner] = useState<Banner>()
    const [warps, setWarps] = useState<Warp[]>([])
    const [items, setItems] = useState<Item[]>([])
+   const [allItems, setAllItems] = useState<FribbelsItem[]>([])
    const [types, setTypes] = useState<Type[]>([])
    const [rarities, setRarities] = useState<Rarity[]>([])
    const [stars, setStars] = useState<number[]>([4,5])
    const { id } = useParams()
    const VITE_API_URL = window._env_.BACKEND_URL
+   const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
+   const fribbels_items = 'https://raw.githubusercontent.com/fribbels/hsr-optimizer/refs/heads/main/src/data/game_data.json'
 
    const changeStars = (star: number) => {
         setStars(prevS => prevS.includes(star) ? prevS.filter(item => item !== star) : [...prevS, star])
@@ -33,18 +38,58 @@ function DetailBanner () {
         fill: c[i?.item_id__rarity as keyof typeof c]
     }))
 
-   useEffect(() => {
-    fetch(`${VITE_API_URL}/api/banner/${id}`)
-        .then(res => res.json())
-        .then(data => {
-            setBanner(data['b'])
-            setWarps(data['warps'])
-            setItems(data['items'])
-            setTypes(data['types'])
-            setRarities(data['rarities'])
-        })
-        .catch(err => console.error(err))
-   }, [id, VITE_API_URL])
+    const fetchBannerData = () => {
+        fetch(`${VITE_API_URL}/api/banner/${id}`)
+            .then(res => res.json())
+            .then(data => {
+                setBanner(data['b'])
+                setWarps(data['warps'])
+                setItems(data['items'])
+                setTypes(data['types'])
+                setRarities(data['rarities'])
+            })
+            .catch(err => console.error(err))
+   }
+
+   const fetchFribbels = () => {
+        fetch(fribbels_items)
+            .then(res => res.json())
+            .then(data => {
+                const itemList = Object.values(data).flatMap(obj => 
+                    Object.entries(obj as Record<string, unknown>)
+                        .filter(([key]) => /^\d+$/.test(key))
+                        .map(([_, value]) => value)
+                ) as FribbelsItem[];
+                setAllItems(itemList);
+            })
+            .catch(err => console.error("Error loading data:", err));
+   }
+
+    useEffect(() => {
+        fetchBannerData()
+        fetchFribbels()
+    }, [id, VITE_API_URL])
+
+    const handleSaveBanner = async (selectedItemId: number | null) => {
+        if (!banner) return;
+        
+        try {
+            const response = await fetch(`${VITE_API_URL}/api/banner/${banner.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ item_id: selectedItemId })
+            });
+
+            if (response.ok) {
+                setIsModalOpen(false);
+                fetchBannerData();
+            } else {
+                alert("Fehler beim Speichern der Bannerdaten.");
+            }
+        } catch (err) {
+            console.error("Netzwerkfehler:", err);
+        }
+   }
 
    const getRarityBorder = (rarity: number) => {
     if (rarity === 3) return "border-sky-300";
@@ -61,7 +106,7 @@ function DetailBanner () {
                 src={`${VITE_API_URL}${banner?.item_image}`}
                 alt="Banner"
                 className="hidden md:block w-auto max-h-[30vh] object-contain rounded-lg cursor-pointer"
-                onClick={() => banner?.item_id === null && window.open(`${VITE_API_URL}/admin/warptracker/banner/${banner?.id}/change`)}
+                onClick={() => setIsModalOpen(true)}
             />
             <div className="flex-1 grid grid-cols-1 lg:grid-cols-[250px_1fr] gap-4 p-4 rounded-xl border border-white/5 backdrop-blur-md bg-white/5 overflow-hidden">
                 <div className="flex flex-col justify-center">
@@ -176,6 +221,13 @@ function DetailBanner () {
                 </table>
             </div>
         </div>
+        <BannerEditModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            banner={banner}
+            availableItems={allItems.filter(i => i.rarity === 5 && i.name != "Trailblazer").sort((a, b) => a.name.localeCompare(b.name))}
+            onSave={handleSaveBanner}
+        />
     </div>
    )
 }
