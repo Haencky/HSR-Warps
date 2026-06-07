@@ -151,3 +151,17 @@ ITEM_TYPES = {
     'en': ['Light Cone', 'Character'],
     'de': ['Lichtkegel', 'Figur'],
 }
+
+LIGHTCONE_NAMES = [
+    'Light Cone', # english, thai, indonesian
+    '光锥', # chinese (simplified)
+    '光錐', # chinese (traditional)
+    '光円錐', # japanese
+    '광추', # korean
+    'Cono de luz', # spanish
+    'Cône de lumière', # french
+    'Световой конус', # russian
+    'Nón Ánh Sáng', # vietnamese
+    'Lichtkegel', # german
+    'Cone de Luz', # portuguese
+]
