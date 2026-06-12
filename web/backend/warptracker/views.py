@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view
 from django.db.models import F, Max, Q, Count
 from rest_framework.response import Response
 from rest_framework import status
-from .const import LOST, ITEM_ID_URL, IMAGE_URL, WIKI_URL, DOUBLES
+from .const import LOST, IMAGE_URL, WIKI_URL, LIGHTCONE_NAMES
 from Levenshtein import distance
 from io import BytesIO
 from django.core.files.images import ImageFile
@@ -19,13 +19,70 @@ def get_analyser() -> WarpAnalyser:
     warps = all_warps = Warp.objects.all().select_related('item_id', 'gacha_id').order_by('warp_id').values('warp_id', 'pity', 'item_id__rarity', 'item_id__item_id', 'item_id__name', 'gacha_id__gacha_type', 'item_id__image')
     return WarpAnalyser(list(warps), all_warps.values_list('warp_id'))
 
-def get_suggestion(input:str, correct:list, max_distance=3, top_n=5):
-    distances = []
-    for n in correct:
-        d = distance(input.lower(), n.lower())
-        if d <= max_distance:
-            distances.append({'item': n, 'distance': d})
-    return sorted(distances, key=lambda x: x['distance'])[:top_n]
+def create_item_manually(item_id: int) -> dict:
+    if Item.objects.filter(item_id=item_id).exists():
+        return {'success': True, 'message': f'Item {item_id} already exists in the database.'}
+    
+    items = getData()
+    try:
+        item = items[f'{item_id}']
+    except KeyError:
+        print(f'Could not find item {item_id}.')
+        return {'success': False, 'message': f'Could not find item {item_id}.'}
+        
+    name = item['name']
+    rarity = item['rarity']
+    path_name = item['path'] if item['path'] != 'Hunt' else f'The Hunt'
+    path, created = Path.objects.get_or_create(name=path_name)
+
+    if created:
+        try:
+            r = requests.get(f'{IMAGE_URL}icon/path/{item["path"]}.png')
+            if r.status_code == 200:
+                path_bytes = BytesIO(r.content)
+                path_file = ImageFile(path_bytes, name=path_name)
+                path.icon.save(path_name, path_file, save=True)
+            else:
+                print(f'Error loading path icon: {r.status_code}.')
+                path.delete()
+                return {'success': False, 'message': f'Could not fetch icon for path {path_name}'}
+        except requests.RequestException as e:
+            print(f'Error loading path icon: {e}')
+            path.delete()
+            return {'success': False, 'message': f'Could not fetch icon for path {path_name}'}
+            
+    img_url = f'{IMAGE_URL}image/{"character_" if item_id < 20_000 else "light_cone_"}portrait/{item_id}.png'
+    img_name = f'{name}.png'
+    try:
+        fetch_img = requests.get(img_url)
+        if fetch_img.status_code == 200:
+            image_bytes = BytesIO(fetch_img.content)
+            django_file = ImageFile(image_bytes, name=img_name)
+        else:
+            return {'success': False, 'message': f'Error loading image for {name}'}
+    except requests.RequestException:
+        return {'success': False, 'message': f'Error loading image for {name}'}
+        
+    wiki = WIKI_URL + name.replace(' ', '_')
+    if item_id < 20_000:
+        typ = ItemType.objects.exclude(name__in=LIGHTCONE_NAMES).first()
+    else:
+        typ = ItemType.objects.filter(name__in=LIGHTCONE_NAMES).first()
+        
+    if not typ:
+        return {'success': False, 'message': 'Run a normal import first to create itemtypes in your database.'}
+        
+    Item.objects.create(
+        item_id=item_id,
+        eng_name=name,
+        name=name,
+        wiki=wiki,
+        image=django_file,
+        rarity=rarity,
+        path=path,
+        typ=typ
+    )
+    return {'success': True, 'message': f'Created item {name} in database.'}
 
 # Create your views here.
 @api_view(['GET'])
@@ -64,36 +121,13 @@ def add_pulls_api(request):
 
 @api_view(['POST'])
 def add_items_manual_api(request):
-    name:str = request.data.get('eng_name')
-    suggestions = []
-    item_id = 0
-    msg = ""
     try:
-        ids = requests.get(ITEM_ID_URL).json()
-        wanted = ids[name]
-        item_id = wanted
-        img_url = f'{IMAGE_URL}image/{"character_" if item_id < 20_000 else "light_cone_"}portrait/{item_id}.png'
-        img_name = f'{name}.png'
-        fetch_img = requests.get(img_url) # fetch image
-        image_bytes = BytesIO(fetch_img.content) # save to byte stream
-        django_file = ImageFile(image_bytes, name=img_name)
-        wiki = WIKI_URL + name.replace(' ', '_')
-        if item_id in DOUBLES: wiki += '_(Light_Cone)'
-        rarity = 5
-        Item.objects.create(
-            item_id = item_id,
-            eng_name = name,
-            name = name,
-            wiki = wiki,
-            image = django_file,
-            rarity = rarity
-        )
-    except requests.RequestException:
-        messages.error(request, 'Error loading Item IDs Json File')
-    except KeyError:
-        suggestions = get_suggestion(name, list(ids.keys()))
-        msg = f"Could not find '{name}'"
-    return Response({'message': msg if msg else f'Added item {name}','id': item_id, 'suggestions': suggestions})
+        item_id = int(request.data.get('item_id'))
+    except (TypeError, ValueError):
+        return Response({'message': 'Invalid item_id provided.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    result = create_item_manually(item_id)
+    return Response({'message': result['message']})
 
 @api_view(['GET'])
 def detail_item_api(request, id:int):
@@ -120,21 +154,35 @@ def items_api(request):
 def path_api(request):
     return Response(PathSerializer(Path.objects.all(), many=True).data)
 
-@api_view(['GET'])
+@api_view(['GET', 'PATCH'])
 def detail_banner_api(request, id:int):
-    b = BannerSerializer(Banner.objects.get(id=id)).data
-    b_data = Warp.objects.filter(gacha_id=id)
-    warps = WarpSerializer(b_data.annotate(rarity=F('item_id__rarity')), many=True).data
-    items = b_data.values('item_id').annotate(count=Count('item_id'), name=F('item_id__name'), image=F('item_id__image'), rarity=F('item_id__rarity'))
-    types = b_data.values('item_id__typ').annotate(count=Count('item_id__typ'), name=F('item_id__typ__name'))
-    rarities = b_data.values('item_id__rarity').annotate(count=Count('item_id__rarity'))
-    return Response({
-        'b': b,
-        'warps': warps,
-        'items': items,
-        'types': types,
-        'rarities': rarities
-    })
+    if request.method == 'PATCH':
+        banner_obj = Banner.objects.get(id=id)
+        item_id = request.data.get('item_id')
+        if item_id is not None:
+            item_id = int(item_id)
+            if not Item.objects.filter(item_id=item_id).exists():
+                result = create_item_manually(item_id)
+                if not result['success']:
+                    return Response({'error': result['message']}, status=status.HTTP_400_BAD_REQUEST)
+
+        banner_obj.item_id_id = item_id
+        banner_obj.save()
+        return Response({'message': 'Banner updated successfully'}, status=status.HTTP_200_OK)
+    else:
+        b = BannerSerializer(Banner.objects.get(id=id)).data
+        b_data = Warp.objects.filter(gacha_id=id)
+        warps = WarpSerializer(b_data.annotate(rarity=F('item_id__rarity')), many=True).data
+        items = b_data.values('item_id').annotate(count=Count('item_id'), name=F('item_id__name'), image=F('item_id__image'), rarity=F('item_id__rarity'))
+        types = b_data.values('item_id__typ').annotate(count=Count('item_id__typ'), name=F('item_id__typ__name'))
+        rarities = b_data.values('item_id__rarity').annotate(count=Count('item_id__rarity'))
+        return Response({
+            'b': b,
+            'warps': warps,
+            'items': items,
+            'types': types,
+            'rarities': rarities
+        })
 
 @api_view(['GET'])
 def update_image_api(request):
@@ -181,10 +229,3 @@ def api_calc_possibilities(request):
         prob = starlight = total_pulls = 0
 
     return Response({'percent': prob, 'starlight': starlight, 'total_pulls': total_pulls})
-
-@api_view(['PATCH', 'POST'])
-def api_update_banner(request, banner_id:int):
-    """
-    Updates a banner (replaces link to admin site)
-    """
-    b = Banner.objects.get(pk=banner_id)

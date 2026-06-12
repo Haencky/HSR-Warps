@@ -550,11 +550,17 @@ def check_banner():
     """
     Tries to match an item to a banner
     """
-    for b in Banner.objects.exclude(item_id__isnull=False).exclude(gacha_type__gacha_type=1):
-        w = W.objects.filter(gacha_id=b.id, item_id__rarity=5).exclude(item_id__in=LOST)
-        if w:
-            item = w[0].item_id
-            b.item_id = item
+    for b in Banner.objects.exclude(gacha_type__gacha_type__in=[1,2]): 
+        valid_warps = W.objects.filter(gacha_id=b.id, item_id__rarity=5).exclude(item_id__in=LOST)
+        if valid_warps.exists():
+            correct_item = valid_warps.first().item_id
+            
+            if b.item_id is not None:
+                is_correctly_set = valid_warps.filter(item_id=b.item_id).exists()
+                
+                if is_correctly_set:
+                    continue
+            b.item_id = correct_item
             b.save()
 
 def update_image(item: Item):
