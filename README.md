@@ -138,7 +138,7 @@ Downloaded files are stored locally in the `/media` folder.
 
 Character and Light Cone information is fetched dynamically from:
 
-https://www.prydwen.gg/star-rail/
+https://github.com/fribbels/hsr-optimizer
 
 ---
 
