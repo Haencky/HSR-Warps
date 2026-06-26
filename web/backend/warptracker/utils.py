@@ -502,7 +502,12 @@ def fetch_info(url:str, gacha_type: int, data_fribbels: dict) -> dict:
         Params:
             urL(str): url to HSR Api
         """
-        current_pity = last_warp.pity if last_warp else 0
+        if last_warp and last_warp.item_id.rarity == 5:
+            current_pity = 0
+        elif last_warp:
+            current_pity = last_warp.pity
+        else:
+            current_pity = 0
         warps = None
         try:
             all_warps = requests.get(url).json()['data']['list'] # request all warps
@@ -536,9 +541,9 @@ def fetch_info(url:str, gacha_type: int, data_fribbels: dict) -> dict:
 
                 if not _check_item(item_id):
                     create_item(w)
+                current_pity+=1
                 if _add_warp(w, current_pity): # returns True if last pull was a 5 star
                     current_pity = 0
-                current_pity+=1
                 time.sleep(0.1)
             return len(warps)
         else:
