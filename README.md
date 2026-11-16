@@ -9,6 +9,7 @@ Track your pulls, pity, banners, owned characters/light cones and more — all i
 > [!TIP]
 > New Tool available at [GitHub](https://github.com/Haencky/Gacha-Tracker) <br>
 > I wont work on this project any more. New tool features:
+> Import of old (used by this tool) DB file
 > - Pet History
 > - Fixed Collab import
 > - Other gacha games (upcomming)
