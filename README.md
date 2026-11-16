@@ -5,6 +5,14 @@ A Django + React (Vite) based gacha tracker for **Honkai: Star Rail**.
 Track your pulls, pity, banners, owned characters/light cones and more — all in a clean self-hosted web interface.
 
 ---
+# NEW TOOL
+> [!TIP]
+> New Tool available at [GitHub](https://github.com/Haencky/Gacha-Tracker) <br>
+> I wont work on this project any more. New tool features:
+> - Pet History
+> - Fixed Collab import
+> - Other gacha games (upcomming)
+---
 
 ## Default Services
 
